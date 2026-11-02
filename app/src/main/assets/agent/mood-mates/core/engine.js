@@ -109,7 +109,7 @@
         mouthShapes[msk] = GEO.buildCustomMouth(Object.assign({ w: mouthBase.w }, raw.mouthShapes[msk]));
       }
     }
-    var palette = Object.assign({ eye: '#233038', eyeHighlight: '#FFFFFF' }, raw.palette || {});
+    var palette = Object.assign({ eye: '#2A2536', eyeHighlight: '#FFFFFF' }, raw.palette || {});
     palette.states = Object.assign({}, raw.palette && raw.palette.states);
     STATE_KEYS.forEach(function (k) {
       if (!palette.states[k]) palette.states[k] = palette.body;

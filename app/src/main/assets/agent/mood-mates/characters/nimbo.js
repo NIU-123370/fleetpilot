@@ -17,20 +17,20 @@ window.MoodMates.characters.register({
   face: { x: 0, y: 2, sx: 1, sy: 1, eye: 1 },
 
   palette: {
-    body: '#B4C6EE',
-    eye: '#2B3550',
+    body: '#C9BEE4',
+    eye: '#372E4D',
     eyeHighlight: '#FFFFFF',
-    blush: '#EFA9B8',
-    zzz: '#9FB3D6',
+    blush: '#C3B7E1',
+    zzz: '#B1A3D2',
     gloss: 0.2,
     states: {
-      base: '#B4C6EE',
-      dim: '#95A5CC',
-      soft: '#C6D6F5',
-      blush: '#E3B8D8',
-      angry: '#D96B70',
-      alert: '#E25B5B',
-      off: '#9AA6C0'
+      base: '#C9BEE4',
+      dim: '#A799C8',
+      soft: '#D8CFEC',
+      blush: '#C6BBE0',
+      angry: '#927BC9',
+      alert: '#8E76C7',
+      off: '#A79DBD'
     }
   },
 

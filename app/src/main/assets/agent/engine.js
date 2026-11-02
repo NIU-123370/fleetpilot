@@ -74,7 +74,7 @@
   /* ---------------- Pose：默认值 / 合并 / 插值 ---------------- */
 
   var DEFAULT_BODY = {
-    x: 0, y: 0, scale: 1, rotate: 0, color: '#F3F0EA', breathe: 0.01,
+    x: 0, y: 0, scale: 1, rotate: 0, color: '#EDEBF2', breathe: 0.01,
     ribbons: 0, confetti: 0, sketch: 0,
     zzz: 0,      /* 睡眠字母粒子（0~1） */
     orbit: 0     /* 常驻水平环带（0~1） */

@@ -27,7 +27,7 @@
   var EYE_HALF = RD.EYE_HALF;      /* 21 */
   var EXPR = RD.EXPRESSIONS;
   var STAR_GOLD = RD.STAR_GOLD;
-  var CONFETTI_COLORS = ['#f9705c', '#5b95f0', '#3fbe86', '#f5b13f', '#9a72ee', '#35c3bd'];
+  var CONFETTI_COLORS = ['#9C87CE', '#9680CB', '#6949B4', '#8970C4', '#A38FD1', '#6748B0'];
   /* 五角星 path（内径比 0.42） */
   var STAR_PATH = (function () {
     var pts = [];

@@ -13,6 +13,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
+import com.wangzan101.mika.ui.theme.MikaTheme
 
 @Composable
 fun FleetAvatar(id:String,modifier:Modifier=Modifier,active:Boolean=true) {
@@ -20,8 +21,16 @@ fun FleetAvatar(id:String,modifier:Modifier=Modifier,active:Boolean=true) {
     val stableId=if(id=="local")context.getSharedPreferences("lan-identity",0).getString("id",id) ?: id else id
     val index=stableId.lowercase(java.util.Locale.ROOT).toByteArray(Charsets.UTF_8).fold(2166136261L){hash,byte->((hash xor (byte.toInt() and 255).toLong())*16777619L) and 0xffffffffL}
     val shape=listOf("blob","wedge","gem")[(index%3).toInt()]
-    val hue=(index%360000)/1000.0
-    fun script()="var element=document.getElementById('bot');element.style.width=(innerWidth*0.8)+'px';element.style.height=(innerHeight*0.8)+'px';element.style.top=(innerHeight*0.1)+'px';window.setMikaShape('$shape');document.getElementById('bot').style.filter='sepia(1) saturate(2) hue-rotate(${hue}deg) brightness(0.84)';window.setMikaState('02',false);window.setMikaState('02',$active)"
+    // 色相以前是 (index%360000)/1000 —— 整个色环随便转，同一屏里青绿、黄绿都有，
+    // 破的是 HUD-1「整体只有一个色相」。
+    //
+    // 试过三层做法，最后才定：CSS 的 hue-rotate 是矩阵近似，同一块头像会按亮度被拉成不同色相
+    // （截图实测浅色下 208°~300° 都出现过，还发过品红），调基准只是换个错法。
+    // 真正的修法是把「颜色」放回它的源头：assets/agent 里那 64 个情绪色值已经统一映射到 258° 紫
+    // （保留各自明暗，表情仍分得清），所以这里不再需要任何滤镜，只按设备微调亮度。
+    val dark=MikaTheme.colors.isDark
+    val brightness=(if(dark)1.15 else 1.0)*(0.95+(index%5)*0.025)
+    fun script()="var element=document.getElementById('bot');element.style.width=(innerWidth*0.8)+'px';element.style.height=(innerHeight*0.8)+'px';element.style.top=(innerHeight*0.1)+'px';window.setMikaShape('$shape');document.getElementById('bot').style.filter='brightness($brightness)';window.setMikaState('02',false);window.setMikaState('02',$active)"
     AndroidView(modifier=modifier,factory={context->WebView(context).apply{
         setBackgroundColor(android.graphics.Color.TRANSPARENT);settings.javaScriptEnabled=true;settings.allowFileAccess=true;webChromeClient=android.webkit.WebChromeClient()
         settings.allowContentAccess=false;isClickable=false;isFocusable=false;setOnTouchListener{_,_->true}

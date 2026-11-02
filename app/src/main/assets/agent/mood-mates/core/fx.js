@@ -91,7 +91,7 @@
 
     /* ===== 云泡（云宝 · 通用）===== */
     cloudpuff: {
-      colors: ['#C3D4F2', '#9FB3D6', '#F5D889', '#9A8AE8'],
+      colors: ['#D4CBEA', '#B1A3D2', '#B4A4DA', '#AD9CD6'],
       orbitSize: [2.8, 4.4],
       burstSize: [3, 5.4],
       makeOrbitNode: function (c) { return el('circle', { r: 1, fill: c, opacity: 0.9, class: 'mm-spark' }); },
@@ -242,7 +242,7 @@
 
     /* ===== 星尘（亮亮 · 教育）===== */
     stardust: {
-      colors: ['#F5B840', '#F7D07A', '#F09A4E', '#FBE3A8'],
+      colors: ['#8A70C5', '#AD9BD6', '#8F77C7', '#CABEE5'],
       orbitSize: [3.4, 5.6],
       burstSize: [3, 6.4],
       makeOrbitNode: function (c) { return el('path', { d: SPARK_PATH, fill: c, class: 'mm-spark' }); },
@@ -256,8 +256,8 @@
         chance: 0.3,
         make: function (c) {
           var g = el('g', {});
-          g.appendChild(el('path', { d: PENCIL_PATH, fill: '#E8A64C' }));
-          g.appendChild(el('path', { d: 'M0.5 -0.16 L1 0 L0.5 0.16 Z', fill: '#5C4632' }));
+          g.appendChild(el('path', { d: PENCIL_PATH, fill: '#8970C4' }));
+          g.appendChild(el('path', { d: 'M0.5 -0.16 L1 0 L0.5 0.16 Z', fill: '#403559' }));
           return g;
         },
         size: [5, 6.5]

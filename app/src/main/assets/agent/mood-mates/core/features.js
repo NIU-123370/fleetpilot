@@ -74,7 +74,7 @@
       glasses: function (acc) {
         var aL = eyeAnchor(-1), aR = eyeAnchor(1);
         var rr = (Math.max(eyeStyle.w, eyeStyle.h) / 2) * face.eye * (acc.fit != null ? acc.fit : 1.22) + 2;
-        var color = acc.color || '#C9A24B';
+        var color = acc.color || '#7659BB';
         var sw = acc.strokeWidth != null ? acc.strokeWidth : 2.6;
 
         var g = el('g', { 'pointer-events': 'none' });
@@ -236,7 +236,7 @@
     var blushL = null, blushR = null, blushCfg = null;
     if (feats.blush !== false) {
       blushCfg = Object.assign(
-        { dx: 34, dy: 26, rx: 11, ry: 6.5, color: palette.blush || '#F2A9A0', max: 0.85 },
+        { dx: 34, dy: 26, rx: 11, ry: 6.5, color: palette.blush || '#C0B2E0', max: 0.85 },
         feats.blush === true ? {} : (feats.blush || {})
       );
       mid = el('g', { 'pointer-events': 'none' });

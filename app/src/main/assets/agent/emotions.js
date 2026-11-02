@@ -41,7 +41,7 @@ window.EMOTION_SEED = [
     transition: 900,
     gaze: false,
     pool: [13, 22, 4], poolMs: [6000, 10000], blinkMs: null, openness: 0.08,
-    body: { y: 4, rotate: -2, breathe: 0.018, color: '#EEEBE4', zzz: 1 },
+    body: { y: 4, rotate: -2, breathe: 0.018, color: '#E7E5ED', zzz: 1 },
     eyes: { both: { y: 4, lookY: 2 } },
     anims: [
       { target: 'eyes', prop: 'y', type: 'sine', amp: 1.2, period: 3600 }
@@ -122,7 +122,7 @@ window.EMOTION_SEED = [
     transition: 1200,
     gaze: false,
     pool: [4, 22, 13], poolMs: [4000, 8000], blinkMs: null, openness: 0.4,
-    body: { y: 6, scale: 0.98, rotate: -1, breathe: 0.005, color: '#EBE8E1' },
+    body: { y: 6, scale: 0.98, rotate: -1, breathe: 0.005, color: '#E4E2EA' },
     eyes: { both: { y: 5 } }
   },
   {
@@ -155,7 +155,7 @@ window.EMOTION_SEED = [
     en: { name: 'Happy', desc: 'Smiling rings rotate, gaze bobs down and up, body bounces lightly; occasional ribbon spin' },
     transition: 380,
     pool: [2, 11, 17, 19], poolMs: [2500, 4500], blinkMs: [2500, 5000], antics: true,
-    body: { y: -3, breathe: 0.014, color: '#F6EFE4' },
+    body: { y: -3, breathe: 0.014, color: '#EAE5F5' },
     eyes: { both: { y: -3 } },
     anims: [
       { target: 'eyes', prop: 'lookY', type: 'glance', amp: 6, period: 3000 },
@@ -183,7 +183,7 @@ window.EMOTION_SEED = [
     en: { name: 'Down', desc: 'Drowsy rings rotate slowly, eyes sinking with a downcast gaze' },
     transition: 820,
     pool: [4, 13, 22], poolMs: [4000, 7000], blinkMs: [4000, 8000],
-    body: { y: 5, rotate: -4, breathe: 0.007, color: '#EDEAE3' },
+    body: { y: 5, rotate: -4, breathe: 0.007, color: '#E6E4EC' },
     eyes: { both: { y: 8, scaleX: 0.88, scaleY: 0.88, lookY: 4 } },
     anims: [
       { target: 'eyes', prop: 'y', type: 'sine', amp: 1.6, period: 3600 }
@@ -213,7 +213,7 @@ window.EMOTION_SEED = [
     transition: 560,
     pool: [0, 24, 13], poolMs: [3000, 5500], blinkMs: [3000, 6000],
     /* base 色 = 序列终态粉，保证静态缩略图与最终观感一致 */
-    body: { rotate: 6, breathe: 0.012, color: '#F4D3D0' },
+    body: { rotate: 6, breathe: 0.012, color: '#DDD6EE' },
     eyes: { both: { y: 4, lookX: 8, lookY: 3 } },
     anims: [
       { target: 'eyes', prop: 'lookX', type: 'sine', amp: 2, period: 2600 }
@@ -221,8 +221,8 @@ window.EMOTION_SEED = [
     sequence: {
       settle: 'hold',
       frames: [
-        { at: 0,    body: { color: '#F3F0EA' } },
-        { at: 1500, body: { color: '#F4D3D0' } }
+        { at: 0,    body: { color: '#EDEBF2' } },
+        { at: 1500, body: { color: '#DDD6EE' } }
       ]
     }
   },
@@ -232,7 +232,7 @@ window.EMOTION_SEED = [
     en: { name: 'Tired', desc: 'Heavy eyelids at half openness with drowsy rings, gaze sinking low' },
     transition: 900,
     pool: [4, 22, 13], poolMs: [4000, 8000], blinkMs: null, openness: 0.55,
-    body: { y: 4, rotate: -3, breathe: 0.016, color: '#EFECE5' },
+    body: { y: 4, rotate: -3, breathe: 0.016, color: '#E8E6EE' },
     eyes: { both: { y: 5, lookY: 3 } },
     anims: [
       { target: 'eyes', prop: 'open', type: 'sine', amp: 0.06, period: 3400 }
@@ -282,7 +282,7 @@ window.EMOTION_SEED = [
     en: { name: 'Satisfied', desc: 'Gazing straight ahead while the eyes nod up and down in steady approval' },
     transition: 580,
     pool: [15, 8, 2], poolMs: [3500, 6000], blinkMs: [3500, 7000], antics: true,
-    body: { breathe: 0.012, color: '#F5EFE6' },
+    body: { breathe: 0.012, color: '#EBE7F4' },
     anims: [
       { target: 'eyes', prop: 'y', type: 'sine', amp: 5, period: 1050 },
       { target: 'body', prop: 'y', type: 'sine', amp: 1.6, period: 1050, phase: 0.6 }
@@ -311,15 +311,15 @@ window.EMOTION_SEED = [
     transition: 260,
     pool: [7, 16], poolMs: [2200, 3800], blinkMs: [3500, 7000],
     /* base 色 = 序列终态红，保证静态缩略图与最终观感一致 */
-    body: { y: 1, breathe: 0.004, color: '#E4574A' },
+    body: { y: 1, breathe: 0.004, color: '#866BC3' },
     anims: [
       { target: 'body', prop: 'x', type: 'jitter', amp: 1.1, speed: 7 }
     ],
     sequence: {
       settle: 'hold',
       frames: [
-        { at: 0,   body: { color: '#F3F0EA' } },
-        { at: 250, body: { color: '#E4574A' } }
+        { at: 0,   body: { color: '#EDEBF2' } },
+        { at: 250, body: { color: '#866BC3' } }
       ]
     }
   },
@@ -391,7 +391,7 @@ window.EMOTION_SEED = [
     en: { name: 'Error', desc: 'Wide rings as the face flashes red and white, settling on alarm red' },
     transition: 220,
     pool: [3, 21], poolMs: [2000, 3600], blinkMs: null,
-    body: { rotate: -6, color: '#E25B5B' },
+    body: { rotate: -6, color: '#8E76C7' },
     eyes: {
       left:  { y: -3, rotate: -6 },
       right: { y: 4,  rotate: 8 }
@@ -402,11 +402,11 @@ window.EMOTION_SEED = [
     sequence: {
       settle: 'hold',
       frames: [
-        { at: 0,   body: { color: '#E25B5B', rotate: -6 } },
+        { at: 0,   body: { color: '#8E76C7', rotate: -6 } },
         { at: 170, body: { color: '#F6F3EC', rotate: -4 } },
-        { at: 340, body: { color: '#E25B5B', rotate: -7 } },
+        { at: 340, body: { color: '#8E76C7', rotate: -7 } },
         { at: 510, body: { color: '#F6F3EC', rotate: -5 } },
-        { at: 700, body: { color: '#DE5555', rotate: -6 } }
+        { at: 700, body: { color: '#886FC4', rotate: -6 } }
       ]
     }
   },
@@ -451,7 +451,7 @@ window.EMOTION_SEED = [
     en: { name: 'Refusing', desc: 'A lowered sidelong gaze with a firm head-shake on entry: the answer is no' },
     transition: 380,
     pool: [14, 5, 23], poolMs: [2600, 4500], blinkMs: [4500, 8000], openness: 0.6,
-    body: { y: 2, rotate: -2, color: '#EFE8E4' },
+    body: { y: 2, rotate: -2, color: '#E8E5EE' },
     eyes: { both: { lookY: 3, y: 2 } },
     sequence: {
       settle: 'base',
@@ -496,7 +496,7 @@ window.EMOTION_SEED = [
     transition: 280,
     gaze: false,
     pool: [13, 22], poolMs: [6000, 9000], blinkMs: null,
-    body: { y: 3, breathe: 0.004, color: '#EBE8E2' },
+    body: { y: 3, breathe: 0.004, color: '#E5E2EB' },
     sequence: {
       settle: 'hold',
       frames: [

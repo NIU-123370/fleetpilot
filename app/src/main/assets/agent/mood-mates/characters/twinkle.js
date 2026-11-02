@@ -18,20 +18,20 @@ window.MoodMates.characters.register({
   face: { x: 0, y: 6, sx: 0.82, sy: 0.82, eye: 0.85 },
 
   palette: {
-    body: '#F5B93F',
-    eye: '#4A3316',
-    blush: '#F0966E',
-    mouth: '#6B4A2E',
-    zzz: '#D9A85F',
+    body: '#8970C4',
+    eye: '#281C44',
+    blush: '#A28DD1',
+    mouth: '#423366',
+    zzz: '#8B72C6',
     gloss: 0.3,
     states: {
-      base: '#F5B93F',
-      dim: '#D6A139',
-      soft: '#F8CC66',
-      blush: '#F2AE7E',
-      angry: '#E8734F',
-      alert: '#E25B5B',
-      off: '#C2A265'
+      base: '#8970C4',
+      dim: '#7355BA',
+      soft: '#A28DD1',
+      blush: '#AC9AD6',
+      angry: '#8B72C5',
+      alert: '#8E76C7',
+      off: '#846CBB'
     }
   },
 
@@ -40,7 +40,7 @@ window.MoodMates.characters.register({
     taper: 0.38, tilt: 0, bend: 0,
     pupil: {
       irisR: 10, pupilR: 4.8,
-      irisColor: '#7A4E2A',
+      irisColor: '#443074',
       socket: '#FFFFFF',
       highlights: [
         { dx: -3.2, dy: -3.8, r: 3 },
@@ -55,7 +55,7 @@ window.MoodMates.characters.register({
     /* 不配眉毛：瞳孔眼 + 眼镜的信息量已足，情绪由眼睑开合 / 视线 / 嘴形表达 */
     accessories: [
       /* autoFit 圆框眼镜：镜框位置 / 半径由角色眼位眼形自动求出 */
-      { kind: 'glasses', color: '#C9973F', fit: 1.3, strokeWidth: 2.6, glintPeriod: 5200 }
+      { kind: 'glasses', color: '#6F50B8', fit: 1.3, strokeWidth: 2.6, glintPeriod: 5200 }
     ]
   },
 
