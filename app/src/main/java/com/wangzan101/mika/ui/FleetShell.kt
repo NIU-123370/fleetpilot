@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalContext
 import com.wangzan101.mika.remote.FleetController
 import com.wangzan101.mika.remote.readLimited
@@ -135,9 +136,14 @@ fun FleetShell(systemStatus:com.wangzan101.mika.settings.SystemStatus,onFix:(Fix
                             if(group !in collapsedGroups)items(members,key={it.id}){device->FleetAvatarButton(device.id,device.name,target==device.id,onClick={showComputer=false;target=device.id},onMention={target="all";activeGroup=null;input+=" @${device.name} "},ordinal=connectedOrder.indexOfFirst{it.id==device.id})}
                         }
                         // 电脑端和本机/其它手机并排:同样一颗小球,选中时打开"电脑派来的任务"。
-                        item(key="computer"){FleetAvatarButton("computer","电脑端",showComputer,onClick={showComputer=true;target=null;activeGroup=null},onMention={},ordinal=connectedOrder.size)}
+                        item(key="computer"){FleetAvatarButton("computer","电脑端",showComputer,onClick={
+                            // 只在这块区域显示问答,不嵌整套主界面(那样会和左栏、输入框叠在一起)
+                            showComputer=true;target=null;activeGroup=null
+                        },onMention={},ordinal=connectedOrder.size)}
                     }
-                    if(showComputer)Box(Modifier.weight(1f)){ComputerChat(computerId){computerReload++}} else if(target==null)Box(Modifier.weight(1f)){localChat()} else Column(Modifier.fillMaxSize().padding(16.dp)){
+                    if(showComputer)Box(Modifier.weight(1f)){ComputerChat(computerId){computerReload++}}
+                    // 主对话页自带抽屉,放在窄容器里会画到边界外(左栏上会露出一条"…eetPilot"),裁一下
+                    else if(target==null)Box(Modifier.weight(1f).clipToBounds()){localChat()} else Column(Modifier.fillMaxSize().padding(16.dp)){
 
                     Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){Text(devices.firstOrNull{it.id==target}?.name ?: activeGroup ?: "全部设备",style=MaterialTheme.typography.titleLarge);var menu by remember{mutableStateOf(false)};Box{TextButton(onClick={menu=true}){Text("•••")};DropdownMenu(expanded=menu,onDismissRequest={menu=false}){DropdownMenuItem(text={Text("保存输入为模板")},enabled=input.isNotBlank(),onClick={templateName=input.take(24);savingTemplate=true;menu=false});templates.keys.sorted().forEach{title->DropdownMenuItem(text={Text("模板 · $title")},onClick={input=templates[title] ?: "";target="all";menu=false},trailingIcon={TextButton(onClick={templates=templates-title}){Text("删除")}})};groups.values.distinct().sorted().forEach{group->DropdownMenuItem(text={Text("分组 · $group")},onClick={activeGroup=group;target="all";menu=false})};DropdownMenuItem(text={Text("删除记录")},onClick={menu=false;clearHistory=true})}}}
                     val visibleHistory=history.filter{row->val id=row.getString("deviceId");(target=="all" && (activeGroup==null || groups[id]==activeGroup)) || target==id}
@@ -164,7 +170,9 @@ fun FleetShell(systemStatus:com.wangzan101.mika.settings.SystemStatus,onFix:(Fix
 
                     FleetVideoWindows(controller,devices.filter{(target=="all" && (activeGroup==null || (groups[it.id] ?: "默认组")==activeGroup)) || it.id==target})
                 }}
-                Column(Modifier.fillMaxWidth().padding(horizontal=14.dp,vertical=8.dp)){
+                // target==null(包括"电脑端")时右边是主对话页:它自带顶栏和输入框,
+                // 外壳这条不能再画,否则两个输入框叠在一起、左边还会露出被裁掉的旧卡片。
+                if(target!=null)Column(Modifier.fillMaxWidth().padding(horizontal=14.dp,vertical=8.dp)){
                     if(status.isNotBlank())Text(status,style=MaterialTheme.typography.labelSmall)
                     if(photos.isNotEmpty())Row{Text("${photos.size} 张图片",style=MaterialTheme.typography.labelSmall);TextButton(enabled=!busy && pendingSends.isEmpty(),onClick={photos=emptyList()}){Text("移除")}}
                     if (pendingSends.isNotEmpty()) Row {
@@ -177,11 +185,6 @@ fun FleetShell(systemStatus:com.wangzan101.mika.settings.SystemStatus,onFix:(Fix
                     Button(enabled=!busy && pendingSends.isEmpty() && input.isNotBlank(),onClick={
                         focus.clearFocus();keyboard?.hide()
                         val text=input
-                        if(showComputer){
-                            // 在"电脑端"里发的话,直接续到电脑那一轮的会话里,由手机上的 Agent 接着做
-                            computerId?.let{com.wangzan101.mika.task.TaskService.start(context,text,it,queue=true)}
-                            input="";log=log+"你：$text"
-                        }else{
                         val images=photos.toList()
                         val targets=devices.filter{it.connected && ((target=="all" && (activeGroup==null || (groups[it.id] ?: "默认组")==activeGroup)) || it.id==target)}
                         request{
@@ -192,7 +195,6 @@ fun FleetShell(systemStatus:com.wangzan101.mika.settings.SystemStatus,onFix:(Fix
                             pendingSends=targets.mapNotNull{device->tasks[device.id]?.let{PendingFleetSend(device,it,images+planned.images[device.id].orEmpty())}}
                             log=log+"你：$text"
                             deliverPending()
-                        }
                         }
                     },contentPadding=PaddingValues(0.dp),modifier=Modifier.size(44.dp),shape=androidx.compose.foundation.shape.CircleShape){Text("↑",style=MaterialTheme.typography.titleLarge)}
                     }
@@ -210,8 +212,8 @@ fun FleetShell(systemStatus:com.wangzan101.mika.settings.SystemStatus,onFix:(Fix
     }}
 }
 
-/** 左侧栏「电脑」:像看本机那样,直接显示电脑经 MCP 派来的那次对话(提问 + 回答)。
- *  每 1.5 秒重读一次,任务在跑的时候能自己长出新的一轮。 */
+/** 左栏「电脑端」:只显示电脑那一轮的提问和回答(读 mcp- 前缀的最新会话),每 1.5 秒自己刷新。
+ *  不嵌主对话页:那样会和左栏、外壳输入框叠在一起。 */
 @androidx.compose.runtime.Composable
 private fun ComputerChat(conversationId:String?,onRefresh:()->Unit){
     val context=androidx.compose.ui.platform.LocalContext.current
@@ -228,26 +230,20 @@ private fun ComputerChat(conversationId:String?,onRefresh:()->Unit){
             androidx.compose.material3.TextButton(onClick=onRefresh){Text("刷新")}
         }
         if(conversationId==null){
-            Text("电脑还没派过任务。在电脑上连上 MCP 后让它做事,这里会出现那次的对话。",style=MaterialTheme.typography.bodySmall,color=MikaTheme.colors.ink2)
+            Text("电脑还没派过任务。",style=MaterialTheme.typography.bodyMedium,color=MikaTheme.colors.ink2)
             return@Column
         }
-        androidx.compose.foundation.lazy.LazyColumn(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(12.dp),reverseLayout=false){
+        androidx.compose.foundation.lazy.LazyColumn(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(14.dp)){
             items(turns.size){i->
                 val t=turns[i]
-                Column(Modifier.fillMaxWidth()){
-                    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End){
-                        Box(Modifier.widthIn(max=300.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(18.dp)).background(MikaTheme.colors.answer).padding(horizontal=14.dp,vertical=10.dp)){
-                            Text(t.userText,style=MaterialTheme.typography.bodyMedium)
-                        }
+                Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End){
+                    Box(Modifier.widthIn(max=300.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(18.dp)).background(MikaTheme.colors.answer).padding(horizontal=14.dp,vertical=10.dp)){
+                        Text(t.userText,style=MaterialTheme.typography.bodyMedium)
                     }
-                    if(t.outcome.isNotBlank()){
-                        Card(modifier=Modifier.fillMaxWidth().padding(top=8.dp),shape=androidx.compose.foundation.shape.RoundedCornerShape(18.dp),colors=androidx.compose.material3.CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surfaceContainerLow)){
-                            Column(Modifier.fillMaxWidth().padding(horizontal=14.dp,vertical=12.dp)){
-                                Text("本机",style=MaterialTheme.typography.labelMedium,color=MikaTheme.colors.accent)
-                                Text(t.outcome,Modifier.padding(top=4.dp),style=MaterialTheme.typography.bodyMedium)
-                            }
-                        }
-                    }
+                }
+                if(t.outcome.isNotBlank()){
+                    // 回答里带 Markdown(粗体、列表),用 App 自己的渲染器,别把 ** 原样显示出来
+                    MarkdownText(t.outcome,MaterialTheme.typography.bodyMedium,Modifier.fillMaxWidth().padding(top=2.dp))
                 }
             }
         }
