@@ -20,7 +20,7 @@
 
 | 文件 | 改动 |
 | --- | --- |
-| `README.md` | 重写（新名字、新首屏、徽标、章节结构、二次开发计划）；Android 最低版本随 minSdk 抬到 12 |
+| `README.md` | 重写（新名字、新首屏、徽标、章节结构、二次开发计划）；Android 最低版本随 minSdk 抬到 12；补了 CI 跑哪四件事、以及 iOS 为什么要编两路 |
 | `README.en.md` | 同上，英文版 |
 | `docs/media/brand/fleetpilot-logo.png` | 新增，本仓库自己的标识 |
 | `UPSTREAM.md` | 本文件 |

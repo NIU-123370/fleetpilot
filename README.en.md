@@ -134,6 +134,15 @@ Android 11 can no longer install. Device-operation capabilities depend on furthe
 Open `ios/MikaRemote.xcodeproj`, select the MikaRemote scheme, choose your own signing team.
 See [REMOTE-IOS.md](REMOTE-IOS.md).
 
+**CI**: `.github/workflows/ci.yml` runs four things - Android (unit tests for both modules, a debug APK,
+compiling androidTest), a real iOS build (one job per Xcode: 26 and 16.4), Swift syntax parsing, and a
+file-by-file diff against upstream. When it goes red, read the annotations on the Actions page first;
+build logs are uploaded as artifacts too.
+
+Both iOS legs matter: only the Xcode 26 SDK has the system liquid glass, so 16.4 compiles the fallback -
+test one side only and the other has never been compiled. The 16.4 leg found a real compile error the
+moment it was added.
+
 Never commit model keys, account credentials or signing material.
 
 ## Generated lists

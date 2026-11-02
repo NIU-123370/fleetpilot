@@ -141,6 +141,10 @@ A 打开小红书主页并截图，B 打开浏览器查看今天的天气。
 `ios/MikaRemote.xcodeproj`，选 MikaRemote scheme，在签名设置里选自己的开发团队后构建。
 iOS 侧的连接方式与限制见 [REMOTE-IOS.md](REMOTE-IOS.md)。
 
+**CI**：`.github/workflows/ci.yml` 跑四件事——安卓（core 与 app 的单元测试、出 debug 安装包、编译 androidTest）、iOS 真编译（Xcode 26 与 16.4 各一路）、iOS 语法解析、与上游逐文件比对。红了先看 Actions 页面上的 annotations，构建日志也会存成 artifact。
+
+iOS 那两路都要跑是有原因的：只有 Xcode 26 的 SDK 提供系统液态玻璃，16.4 编的是降级那一路；只验一边，另一边就从来没编译过。16.4 那一路第一次跑就抓出一个只在旧 SDK 上才成立的编译错误。
+
 模型密钥、账号凭证和本机签名材料不要写进源码。
 
 ## 内置清单
