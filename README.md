@@ -20,11 +20,6 @@
 
 </div>
 
-> **出处先说清楚。** FleetPilot 是 **[mylea1/phongent](https://github.com/mylea1/phongent)**
-> （Apache-2.0）的衍生项目：拉取代码后改名、重写文档，**既有代码一行没动**。
-> 上游自己又是 [wangzan101/mika](https://github.com/wangzan101/mika) 的衍生项目，
-> 这条授权链在 [NOTICE](NOTICE) 里原样带着。逐条差异和核对方法见 [UPSTREAM.md](UPSTREAM.md)。
-> 本仓库要做的增量在[二次开发计划](#二次开发计划)一节，那部分还没开始写。
 
 ## 是什么
 
@@ -223,11 +218,5 @@ iOS 侧的连接方式与限制见 [REMOTE-IOS.md](REMOTE-IOS.md)。
 [NOTICE](NOTICE) 和 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)，其中包含上游对
 Mika 的声明，本仓库原样保留。
 
-授权链：[wangzan101/mika](https://github.com/wangzan101/mika) →
-[mylea1/phongent](https://github.com/mylea1/phongent) → 本仓库。
-上游提交 `0b57e35d4e4c8460fdd87fcd33f751f764e7423d`（2026-11-02 拉取）。
-
-上游作者：[mylea · @myleafy1](https://x.com/myleafy1)。
-**本仓库的问题请开 issue，不要联系上游作者要支持。**
 
 本仓库维护者：[NIU-123370](https://github.com/NIU-123370)。
