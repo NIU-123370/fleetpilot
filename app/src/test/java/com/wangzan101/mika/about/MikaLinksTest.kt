@@ -38,7 +38,7 @@ class MikaLinksTest {
     @Test
     fun issueUrlIsEncoded() {
         val url = MikaLinks.issueUrl(device)
-        assertTrue(url.startsWith("https://github.com/wangzan101/Mika/issues/new?title=&body="))
+        assertTrue(url.startsWith("https://github.com/NIU-123370/fleetpilot/issues/new?title=&body="))
         val query = url.substringAfter('?')
         assertFalse("no raw spaces or newlines", query.any { it == ' ' || it == '\n' || it == '+' })
         assertFalse("no raw non-ASCII", query.any { it.code > 127 })
@@ -50,9 +50,21 @@ class MikaLinksTest {
 
     @Test
     fun linksPointAtTheRepo() {
-        assertEquals("https://github.com/wangzan101/Mika#readme", MikaLinks.README)
+        assertEquals("https://github.com/NIU-123370/fleetpilot#readme", MikaLinks.README)
         assertEquals("https://x.com/wangzan101", MikaLinks.X)
-        assertTrue(MikaLinks.LATEST_RELEASE_API.endsWith("/repos/wangzan101/Mika/releases/latest"))
+        assertTrue(MikaLinks.LATEST_RELEASE_API.endsWith("/repos/NIU-123370/fleetpilot/releases/latest"))
+    }
+
+    /**
+     * 反馈与更新检查指向本 fork，但上游出处必须还在常量里——
+     * 「关于」页靠它显示"由谁改名而来"，改名不许把出处弄丢。
+     */
+    @Test
+    fun upstreamCreditSurvivesTheRename() {
+        assertEquals("https://github.com/mylea1/phongent", MikaLinks.UPSTREAM_REPO)
+        assertEquals("https://github.com/wangzan101/mika", MikaLinks.UPSTREAM_OF_REPO)
+        assertEquals("mylea1/phongent", MikaLinks.UPSTREAM_LABEL)
+        assertTrue(MikaLinks.REPO.startsWith("https://github.com/NIU-123370/"))
     }
 
     /** 交给 Mika 的原话:按微信号找作者、发那句话;找不到时不加好友、不发给别人。 */

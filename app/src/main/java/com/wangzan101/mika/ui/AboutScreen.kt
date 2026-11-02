@@ -106,6 +106,8 @@ fun AboutScreen(
                 update.update != null -> sheet = AboutSheet.Update
                 update.status == CheckStatus.Failed ->
                     Toast.makeText(context, AboutCopy.OFFLINE_TOAST, Toast.LENGTH_SHORT).show()
+                update.status == CheckStatus.NoReleases ->
+                    Toast.makeText(context, AboutCopy.NO_RELEASES_TOAST, Toast.LENGTH_SHORT).show()
                 else -> Toast.makeText(context, AboutCopy.UP_TO_DATE_TOAST, Toast.LENGTH_SHORT).show()
             }
         }
@@ -141,6 +143,7 @@ fun AboutScreen(
         }
         GroupCard {
             ListRow(MikaIcons.Code, AboutCopy.REPO, AboutCopy.REPO_SUB, first = true, onClick = { onOpenUrl(MikaLinks.REPO) }) { ExternalMark() }
+            ListRow(MikaIcons.Globe, AboutCopy.UPSTREAM, AboutCopy.UPSTREAM_SUB, onClick = { onOpenUrl(MikaLinks.UPSTREAM_REPO) }) { ExternalMark() }
             ListRow(MikaIcons.Book, AboutCopy.GUIDE, AboutCopy.GUIDE_SUB, onClick = { onOpenUrl(MikaLinks.README) }) { ExternalMark() }
         }
 

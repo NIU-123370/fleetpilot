@@ -21,6 +21,8 @@ object AboutCopy {
     val UP_TO_DATE_TOAST: String get() = tr(R.string.about_up_to_date_toast)
     val OFFLINE: String get() = tr(R.string.about_offline)
     val OFFLINE_TOAST: String get() = tr(R.string.about_offline_toast)
+    /** 404 与"连不上"分开说：本 fork 现在是真的还没有 release，不是网络问题。 */
+    val NO_RELEASES_TOAST: String get() = tr(R.string.about_no_releases_toast)
     val CHANGELOG: String get() = tr(R.string.about_changelog)
     val CHANGELOG_SUB: String get() = tr(R.string.about_changelog_sub)
     val CHANGELOG_EMPTY: String get() = tr(R.string.about_changelog_empty)
@@ -60,6 +62,9 @@ object AboutCopy {
     val FOLLOW_SUB: String get() = tr(R.string.about_follow_sub, MikaLinks.X_HANDLE)
     val REPO: String get() = tr(R.string.about_repo)
     val REPO_SUB: String get() = tr(R.string.about_repo_sub, MikaLinks.REPO_LABEL)
+    /** 上游出处:改名而来这件事在界面上要看得见,不只是仓库里放个 LICENSE 文件。 */
+    val UPSTREAM: String get() = tr(R.string.about_upstream)
+    val UPSTREAM_SUB: String get() = tr(R.string.about_upstream_sub, MikaLinks.UPSTREAM_LABEL, MikaLinks.UPSTREAM_OF_LABEL)
     val GUIDE: String get() = tr(R.string.about_guide)
     val GUIDE_SUB: String get() = tr(R.string.about_guide_sub)
 

@@ -35,11 +35,36 @@
 | `app/src/main/java/com/wangzan101/mika/capsule/CapsuleContent.kt` | 胶囊里两处写死的 `"Mika"` 改成 `tr(R.string.app_name)`（上游改名漏了它们，胶囊会一半念 phongent 一半念 Mika） |
 | `app/src/main/java/com/wangzan101/mika/ui/LicensesScreen.kt` | 许可页补上 `Aora Bot / Mood Mates` 一条——`THIRD_PARTY_NOTICES.md` 有它，许可页漏列是合规问题 |
 | `app/src/test/**`、`app/src/androidTest/**`（10 个文件） | 把 17 处还写着 Mika 的文案期望对齐到实际文案；URL 里的 `wangzan101/Mika` 一律没动 |
+| `app/src/main/java/com/wangzan101/mika/about/MikaLinks.kt` | 对外地址分成两组：反馈/发布页/检查更新指向本仓库，上游两级（phongent、mika）作为 `UPSTREAM_*` 保留并显示在「关于」页 |
+| `app/src/main/java/com/wangzan101/mika/about/UpdateChecker.kt` | 新增 `CheckStatus.NoReleases`：查发布吃 404 是"这个仓库还没发布过"，不是"连不上"（本 fork 现在正是前者） |
+| `app/src/main/java/com/wangzan101/mika/ui/AboutCopy.kt`、`AboutScreen.kt` | 「关于」页加一行上游出处，并把"没有 release"单独提示出来 |
+| `app/src/main/res/values*/strings_about.xml`（简中、繁中、英文） | 同上三条文案；"上游作者"这个改法把 wangzan101 的微博/微信标成**上游的个人渠道**，不是本项目的客服入口 |
+| `app/src/test/java/com/wangzan101/mika/about/`（`UpdateCheckerTest.kt`、`MikaLinksTest.kt`、`ApkIntegrityTest.kt`） | 404 与"发布后清标记"两条新用例、上游出处在改名后仍在用例里、`ApkIntegrity` 的可信下载白名单跟着 `RELEASES` 改（**上游的 APK 现在会被拒**，见下节） |
 | `.github/workflows/ci.yml` | 新增：安卓全套（测试＋出包）、与上游逐文件比对、iOS 语法解析 |
 | `.git` | 未继承上游历史，从零开始提交；出处以本文件与两份 README 顶部标注为准 |
 
 上游的 `docs/media/brand/phongent-logo.png`、`phongent-icon.png` 以及 `ios/App/Assets.xcassets/AppIcon.appiconset/phongent.png`
 都留在原位没删——它们仍被工程文件引用，删了会让构建找不到资源。
+
+## 改名之外，必须跟着转过去的三处
+
+拉下来时界面上的对外地址仍指向上游，这不是"署名"问题，是会走错的功能：
+
+1. **提反馈**：`MikaLinks.REPO` / `NEW_ISSUE` 原指 `wangzan101/Mika`。用这个 fork 的人点「反馈问题」，
+   bug 会落到别人仓库的 issue 里，而本仓库的 issue 列表永远是空的——修的人看不见问题。
+2. **检查更新**：`LATEST_RELEASE_API` 原来读上游的发布页。上游一发新版，本仓库的客户端就提示"有新版本"，
+   并按上游的版本号判断新旧，而本仓库的改动根本不在那个包里。现在查本仓库，而本仓库还没有 release，
+   GitHub 对这种情况回 **404**——所以 `CheckStatus` 多了一档 `NoReleases`，提示"这个仓库还没发布过安装包"，
+   而不是和"网络连不上"共用一句失败提示。这一档在 `UpdateCheckerTest` 里有用例，
+   包括"吃过一次 404、后来真出了 release 时标记要清掉"（否则第一次的 404 会永久盖住后面的成功）。
+3. **APK 下载白名单**：`ApkIntegrity.requireOfficialUrl` 是按 `MikaLinks.RELEASES` 拼前缀的，
+   所以第 1、2 条一改，**上游 `wangzan101/Mika` 和 `mylea1/phongent` 的 release 地址就不再是可信来源**。
+   这是对的——本仓库不能把一个自己没核对过的产物当成"官方包"装进手机——
+   但它是改地址的连带后果，不该被当成"顺手放宽一点"处理，所以 `ApkIntegrityTest` 把这两条明确写成"应被拒绝"。
+
+上游的出处没有因为这三条消失：`UPSTREAM_REPO`（phongent）与 `UPSTREAM_OF_REPO`（mika）都在，
+「关于」页新增一行显示它们，`MikaLinksTest::upstreamCreditSurvivesTheRename` 盯着这一条。
+而 `X`、微信号那三个仍是**上游作者个人**的渠道，界面文案改成"上游作者"，避免有人把它们当成本项目的客服。
 
 ## 怎么核对改了哪些
 
@@ -56,10 +81,10 @@ diff -rq -x .git /tmp/upstream /tmp/fleetpilot
 | 检查 | 状态 |
 | --- | --- |
 | `./gradlew :core:test`（纯 JVM 模块，含文档一致性测试） | ✅ 2426 条，0 失败，2 跳过 |
-| `./gradlew :app:testDebugUnitTest` | ✅ 982 条，**0 失败**（原来 18 条红，见下一节，已修） |
+| `./gradlew :app:testDebugUnitTest` | ✅ 985 条，**0 失败**（原来 18 条红，见下一节，已修；后来新增 3 条用例） |
 | `./gradlew :app:compileDebugKotlin` | ✅ 通过（先失败两次：`matchParentSize` 不该 import、`@Composable` 不能在 DrawScope 里调用；都已修） |
-| `./gradlew :app:assembleDebug` | ✅ 出包 `app-debug.apk` 95 MB；`classes26.dex` 里能查到 FleetGlassSurface / FleetWallpaper 的符号，证明新代码真进了产物 |
-| GitHub Actions（`.github/workflows/ci.yml`） | ⚠️ 三条 job 已写（安卓全套 / 出处核对 / iOS 语法解析），**本机上不了线**——它的红绿要在 GitHub 上看这次推送的结果 |
+| `./gradlew :app:assembleDebug` | ✅ 出包 `app-debug.apk` 103,695,204 字节（约 99 MB）；`classes26.dex` 里能查到 FleetGlassSurface / FleetWallpaper 的符号，证明新代码真进了产物 |
+| GitHub Actions（`.github/workflows/ci.yml`） | ⚠️ 三条 job 已写（安卓全套 / 出处核对 / iOS 语法解析）。第一条 CI 在 20 秒内红过：`yes \| sdkmanager --licenses` 在 `set -euo pipefail` 下被 SIGPIPE 打断（本机复现过，改成预置许可文件）；**改完之后的那条绿没绿，要看这一版推送后 Actions 的读数，别按上面这行推断** |
 | Swift 语法解析（`swiftc -parse`，30 个文件） | ✅ 全过；正对照：故意截断一个文件能报 4 个 error |
 | Swift 类型检查与链接、iOS 构建 | ❌ 没做——本机只有 Command Line Tools，没有 Xcode（装它要 Apple ID 且 12 GB 起） |
 | 跑起来好不好看、滚起来掉不掉帧 | ❌ 没跑过任何一台真机或模拟器 |

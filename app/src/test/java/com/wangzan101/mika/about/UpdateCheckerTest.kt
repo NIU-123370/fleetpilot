@@ -86,6 +86,29 @@ class UpdateCheckerTest {
         assertNull(c.state.value.update)
     }
 
+    /** 404 是"这个仓库还没有发布",不是"连不上"——本衍生项目现在正是前者,提示必须分开说。 */
+    @Test
+    fun noReleasesYetIsItsOwnStatus() = runTest {
+        github = MockResponse().setResponseCode(404).setBody("""{"message":"Not Found"}""")
+        val c = checker()
+        c.check(manual = true)
+        assertEquals(CheckStatus.NoReleases, c.state.value.status)
+        assertNull(c.state.value.update)
+    }
+
+    /** 吃过一次 404 之后又查到新版本时,那个"还没发布"不能粘住:否则第一次失败会永久盖住后面的成功。 */
+    @Test
+    fun noReleasesFlagClearsOnceAReleaseAppears() = runTest {
+        github = MockResponse().setResponseCode(404).setBody("""{"message":"Not Found"}""")
+        val c = checker()
+        c.check(manual = true)
+        assertEquals(CheckStatus.NoReleases, c.state.value.status)
+        github = release("v0.2.0")
+        c.check(manual = true)
+        assertEquals(CheckStatus.Done, c.state.value.status)
+        assertTrue(c.state.value.hasUpdate)
+    }
+
     @Test
     fun manualFailureIsReported() = runTest {
         val c = checker()

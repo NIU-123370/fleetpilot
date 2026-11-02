@@ -24,7 +24,7 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 /** 手动检查更新这一次的结果;自动检查不改它(失败时不打扰)。 */
-enum class CheckStatus { Idle, Checking, Done, Failed }
+enum class CheckStatus { Idle, Checking, Done, Failed, NoReleases }
 
 /**
  * 检查更新的状态。[latest] 是最近一次查到的版本(更新记录用),[update] 是比当前新的那个(有它才有红点)。
@@ -103,13 +103,31 @@ class UpdateChecker(
             if (found != null) {
                 _state.update { it.withLatest(found) }
             }
-            if (manual) _state.update { it.copy(status = if (found != null) CheckStatus.Done else CheckStatus.Failed, manualRounds = it.manualRounds + 1) }
+            if (manual) _state.update {
+                it.copy(
+                    status = when {
+                        found != null -> CheckStatus.Done
+                        // 404 是"这个仓库还没有发布",不是"连不上"——本 fork 现在正是前者
+                        lastWasNotFound -> CheckStatus.NoReleases
+                        else -> CheckStatus.Failed
+                    },
+                    manualRounds = it.manualRounds + 1,
+                )
+            }
             save()
         }
     }
 
+    /** 最近一次查发布是不是吃了 404。GitHub 对"仓库还没有 release"就回 404,这和连不上是两件事。 */
+    private var lastWasNotFound = false
+
     /** GitHub 上最新的发布;没查到为空。 */
-    internal fun fetchLatest(): ReleaseInfo? = runCatching { Releases.fromGitHub(get(releaseApi)) }.getOrNull()
+    internal fun fetchLatest(): ReleaseInfo? {
+        lastWasNotFound = false
+        return runCatching { Releases.fromGitHub(get(releaseApi)) }
+            .onFailure { lastWasNotFound = it.message?.startsWith("HTTP 404") == true }
+            .getOrNull()
+    }
 
     private fun get(url: String): String {
         val req = Request.Builder().url(url)

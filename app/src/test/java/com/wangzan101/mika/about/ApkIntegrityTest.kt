@@ -10,21 +10,27 @@ class ApkIntegrityTest {
     @get:Rule val temp = TemporaryFolder()
 
     @Test fun acceptsOfficialApk() {
-        ApkIntegrity.requireOfficialUrl("https://github.com/wangzan101/Mika/releases/download/v0.2.0/Mika.apk")
+        ApkIntegrity.requireOfficialUrl("https://github.com/NIU-123370/fleetpilot/releases/download/v0.2.0/FleetPilot.apk")
     }
 
+    /**
+     * 官方来源只有本仓库。改名之后上游那两个仓库必须被拒绝——
+     * 否则这个 fork 会去自动安装别人签的 APK。
+     */
     @Test fun rejectsUntrustedDownloads() {
         for (url in listOf(
-            "http://github.com/wangzan101/Mika/releases/download/v0.2.0/Mika.apk",
-            "https://github.com.evil.test/wangzan101/Mika/releases/download/v0.2.0/Mika.apk",
-            "https://github.com/other/Mika/releases/download/v0.2.0/Mika.apk",
-            "https://github.com/wangzan101/Mika/releases/download/../../other.apk",
-            "https://github.com/wangzan101/Mika/releases/download/%2e%2e/%2E%2e/%2e%2e/%2e%2e/other/x.apk",
-            "https://objects.githubusercontent.com/wangzan101/Mika/releases/download/v0.2.0/Mika.apk",
-            "https://github.com/wangzan101/Mika/releases/download/v0.2.0/Mika.zip",
-            "https://github.com/wangzan101/Mika/releases/tag/v0.2.0",
-            "https://user:pass@github.com/wangzan101/Mika/releases/download/v0.2.0/Mika.apk",
-            "https://github.com:8443/wangzan101/Mika/releases/download/v0.2.0/Mika.apk",
+            "http://github.com/NIU-123370/fleetpilot/releases/download/v0.2.0/FleetPilot.apk",
+            "https://github.com.evil.test/NIU-123370/fleetpilot/releases/download/v0.2.0/FleetPilot.apk",
+            "https://github.com/other/fleetpilot/releases/download/v0.2.0/FleetPilot.apk",
+            "https://github.com/wangzan101/Mika/releases/download/v0.2.0/Mika.apk",
+            "https://github.com/mylea1/phongent/releases/download/v0.2.0/phongent.apk",
+            "https://github.com/NIU-123370/fleetpilot/releases/download/../../other.apk",
+            "https://github.com/NIU-123370/fleetpilot/releases/download/%2e%2e/%2E%2e/%2e%2e/%2e%2e/other/x.apk",
+            "https://objects.githubusercontent.com/NIU-123370/fleetpilot/releases/download/v0.2.0/FleetPilot.apk",
+            "https://github.com/NIU-123370/fleetpilot/releases/download/v0.2.0/FleetPilot.zip",
+            "https://github.com/NIU-123370/fleetpilot/releases/tag/v0.2.0",
+            "https://user:pass@github.com/NIU-123370/fleetpilot/releases/download/v0.2.0/FleetPilot.apk",
+            "https://github.com:8443/NIU-123370/fleetpilot/releases/download/v0.2.0/FleetPilot.apk",
         )) rejects { ApkIntegrity.requireOfficialUrl(url) }
     }
 
