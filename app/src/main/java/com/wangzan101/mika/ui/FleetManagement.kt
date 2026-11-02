@@ -151,7 +151,7 @@ fun FleetManagement(controller:FleetController,devices:List<FleetController.Devi
 }
 
 @Composable
-fun FleetManagementHome(controller:FleetController,devices:List<FleetController.Device>){
+fun FleetManagementHome(controller:FleetController,devices:List<FleetController.Device>,status:com.wangzan101.mika.settings.SystemStatus,onFix:(Fix)->Unit){
     val context=androidx.compose.ui.platform.LocalContext.current
     val providers=com.wangzan101.mika.settings.ProviderStore.get(context)
     val connected by providers.providers.collectAsState()
@@ -163,10 +163,13 @@ fun FleetManagementHome(controller:FleetController,devices:List<FleetController.
     androidx.activity.compose.BackHandler(page!=null){page=null}
     when(val selected=page){
         "localModels"->ModelSetupScreen(providers,false,onBack={page=null},onDone={page=null})
+        // 手机操作向导：外壳设置里以前没有这条路（改版时漏了），而"打开 App / 点屏幕"必须靠它配对内置助手。
+        "phoneSetup"->PhoneSetupScreen(status,false,onFix,onboarding=false,onClose={page=null})
         null->LazyColumn(Modifier.fillMaxSize().padding(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
             item{Text("设置",style=MaterialTheme.typography.headlineMedium)}
             item{Row(Modifier.fillMaxWidth(),verticalAlignment=androidx.compose.ui.Alignment.CenterVertically){Text("显示安卓小窗",Modifier.weight(1f));Switch(checked=showWindows,onCheckedChange=controller::setShowWindows)}}
             item{Text("当前主控端",style=MaterialTheme.typography.labelLarge)}
+            item{Card(onClick={page="phoneSetup"},modifier=Modifier.fillMaxWidth(),shape=androidx.compose.foundation.shape.RoundedCornerShape(18.dp),colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surfaceContainerLow)){Row(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=18.dp),verticalAlignment=androidx.compose.ui.Alignment.CenterVertically){Text("手机操作",Modifier.weight(1f),style=MaterialTheme.typography.bodyLarge);Text("›",color=MaterialTheme.colorScheme.onSurfaceVariant)}}}
             item{TextButton(onClick={page="localModels"}){Text("模型服务商与本机执行模型")}}
             item{Card(Modifier.fillMaxWidth()){Column(Modifier.padding(16.dp)){
                 Text("任务下发模型",style=MaterialTheme.typography.titleMedium)

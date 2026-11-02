@@ -33,7 +33,7 @@ private class PendingFleetSend(val device: FleetController.Device, val text: Str
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun FleetShell(localChat:@Composable ()->Unit) {
+fun FleetShell(systemStatus:com.wangzan101.mika.settings.SystemStatus,onFix:(Fix)->Unit,localChat:@Composable ()->Unit) {
     val keyboard=androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     val focus=androidx.compose.ui.platform.LocalFocusManager.current
     val imeVisible=WindowInsets.ime.getBottom(androidx.compose.ui.platform.LocalDensity.current)>0
@@ -117,7 +117,8 @@ fun FleetShell(localChat:@Composable ()->Unit) {
         Box(Modifier.weight(1f)){
             when(tab){
                 0->FleetRadar(devices,busy,status,onChat={device->target=if(device.id=="local")null else device.id;tab=1},onEdit={device->renaming=device;newName=device.name;newGroup=groups[device.id] ?: ""},onConnect={device->request{try{controller.connect(device);status="已连接 ${device.name}";target=device.id;tab=1}catch(e:Exception){connectionError=e.message ?: "重连失败"}}},connecting=connecting,groups=groups,onGroup={ids,name->ids.forEach{controller.setGroup(it,name)}},onConnectAll={targets->request{val failures=controller.connectAll(targets);if(failures.isNotEmpty())connectionError="连接失败："+failures.joinToString("、")}})
-                1->if(target==null)localChat() else Column(Modifier.fillMaxSize()){
+                // 左边栏常驻：以前没选设备时整屏铺 localChat()，侧栏会突然消失，看起来像"栏没了"。
+                1->Column(Modifier.fillMaxSize()){
                 Row(Modifier.weight(1f)){
                     LazyColumn(Modifier.width(76.dp).background(MikaTheme.colors.glassFill)){
                         item{TextButton(onClick={target="all";activeGroup=null}){Text("全部")}}
@@ -126,7 +127,7 @@ fun FleetShell(localChat:@Composable ()->Unit) {
                             if(group !in collapsedGroups)items(members,key={it.id}){device->FleetAvatarButton(device.id,device.name,target==device.id,onClick={target=device.id},onMention={target="all";activeGroup=null;input+=" @${device.name} "})}
                         }
                     }
-                    if(target==null)localChat() else Column(Modifier.fillMaxSize().padding(16.dp)){
+                    if(target==null)Box(Modifier.weight(1f)){localChat()} else Column(Modifier.fillMaxSize().padding(16.dp)){
 
                     Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){Text(devices.firstOrNull{it.id==target}?.name ?: activeGroup ?: "全部设备",style=MaterialTheme.typography.titleLarge);var menu by remember{mutableStateOf(false)};Box{TextButton(onClick={menu=true}){Text("•••")};DropdownMenu(expanded=menu,onDismissRequest={menu=false}){DropdownMenuItem(text={Text("保存输入为模板")},enabled=input.isNotBlank(),onClick={templateName=input.take(24);savingTemplate=true;menu=false});templates.keys.sorted().forEach{title->DropdownMenuItem(text={Text("模板 · $title")},onClick={input=templates[title] ?: "";target="all";menu=false},trailingIcon={TextButton(onClick={templates=templates-title}){Text("删除")}})};groups.values.distinct().sorted().forEach{group->DropdownMenuItem(text={Text("分组 · $group")},onClick={activeGroup=group;target="all";menu=false})};DropdownMenuItem(text={Text("删除记录")},onClick={menu=false;clearHistory=true})}}}
                     val visibleHistory=history.filter{row->val id=row.getString("deviceId");(target=="all" && (activeGroup==null || groups[id]==activeGroup)) || target==id}
@@ -182,7 +183,7 @@ fun FleetShell(localChat:@Composable ()->Unit) {
                 }}
 
                 2->FleetMessages(controller,devices,snapshots)
-                3->FleetManagementHome(controller,devices)
+                3->FleetManagementHome(controller,devices,systemStatus,onFix)
             }
         }
         if(!imeVisible)FleetGlassSurface(Modifier.padding(horizontal=10.dp,vertical=6.dp),GlassShape.Bar){

@@ -87,7 +87,8 @@ class MainActivity : ComponentActivity() {
             MikaTheme(reduceMotion = animationsOff(this)) {
                 // 在输入框外面点一下或拖动就收起键盘,全 App 统一
                 KeyboardDismissArea(Modifier.fillMaxSize()) {
-                    FleetShell { MikaRoot(store, monitor, ::perform, requestedConversation) { requestedConversation = null } }
+                    val shellStatus by monitor.status.collectAsState()
+                    FleetShell(shellStatus, ::perform) { MikaRoot(store, monitor, ::perform, requestedConversation) { requestedConversation = null } }
                 }
             }
         }

@@ -35,6 +35,7 @@ app/src/main/java/com/wangzan101/mika/ui/FleetAvatar.kt
 app/src/main/java/com/wangzan101/mika/ui/FleetManagement.kt
 app/src/main/java/com/wangzan101/mika/ui/FleetShell.kt
 app/src/main/java/com/wangzan101/mika/ui/LicensesScreen.kt
+app/src/main/java/com/wangzan101/mika/ui/MainActivity.kt
 app/src/main/java/com/wangzan101/mika/ui/McpScreen.kt
 app/src/main/java/com/wangzan101/mika/ui/SettingsScreen.kt
 app/src/main/java/com/wangzan101/mika/ui/theme/Colors.kt
