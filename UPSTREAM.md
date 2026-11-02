@@ -31,7 +31,10 @@
 | `app/src/main/java/com/wangzan101/mika/ui/theme/Glass.kt` | 新增：壁纸与玻璃面板，零第三方依赖 |
 | `app/src/main/java/com/wangzan101/mika/ui/FleetShell.kt` | 根节点铺壁纸；底部导航、输入框、设备侧栏改玻璃/半透明 |
 | `app/build.gradle.kts` | minSdk 30 → 31（背景模糊要 API 31） |
-| `ios/Shared/FleetPalette.swift` | 新增：与安卓同一套单色相 token、壁纸、`fleetGlass`（iOS 26 系统材质，17–19 退回超薄材质） |
+| `ios/Shared/FleetPalette.swift` | 新增：与安卓同一套单色相 token、壁纸、`fleetGlass`（iOS 26 系统材质，17–19 退回超薄材质）；后来再加一个 `fleetGlassBackground`，把"只在背后垫一层、还能带色调"的编译器条件也收进同一个出口 |
+| `ios/App/DeviceChat.swift` | 输入框那层原来直接调 `.glassEffect(...)`，外面只包 `#available(iOS 26.0, *)`——运行时的判断救不了编译期，Xcode 16.4 那一路就是这么红的；改成走 `fleetGlassBackground` |
+| `core/src/test/kotlin/com/wangzan101/mika/core/IosCompilerGateTest.kt` | 新增守卫：26-only 的调用只许待在 `FleetPalette` 那个带 `#if compiler(>=6.2)` 的出口里，别处出现就红（投毒验过） |
+| `core/src/test/kotlin/com/wangzan101/mika/core/NoStaleProductNameInUserCopyTest.kt` | 新增守卫：界面文案里不许留着上一个名字（URL 里的仓库地址按位置放行），并钉住产品名只定义一次 |
 | `ios/MikaRemote.xcodeproj/project.pbxproj` | 上面那个新文件挂进工程：主 App 与 Widget 扩展两边的 Sources 阶段都要（`Widgets/MikaWidgets.swift` 也在用同一批 token）。Xcode 工程按名字逐个列源码，新增文件不会自己进去 |
 | `core/src/test/kotlin/com/wangzan101/mika/core/IosProjectFileListTest.kt` | 新增守卫：磁盘上的 .swift 与工程里的文件引用、两边 Sources 阶段双向核对（见下节） |
 | `ios/App`、`ios/Shared`、`ios/Widgets` 下若干 Swift 文件 | 散落的系统彩色（mint/teal/orange/red/green/blue/purple/pink）换成同一套 token；头像逐机色相旋转收敛到紫带 |
@@ -86,15 +89,15 @@ diff -rq -x .git /tmp/upstream /tmp/fleetpilot
 
 | 检查 | 状态 |
 | --- | --- |
-| `./gradlew :core:test`（纯 JVM 模块，含文档一致性测试与上面那节 iOS 工程守卫） | ✅ 2433 条，0 失败，2 跳过 |
+| `./gradlew :core:test`（纯 JVM 模块，含文档一致性测试与上面两节的 iOS 守卫） | ✅ 2439 条，0 失败，2 跳过 |
 | `./gradlew :app:testDebugUnitTest` | ✅ 986 条，**0 失败**（原来 18 条红，见下一节，已修；之后新增 4 条用例） |
 | `./gradlew :app:compileDebugKotlin` | ✅ 通过（先失败两次：`matchParentSize` 不该 import、`@Composable` 不能在 DrawScope 里调用；都已修） |
-| `./gradlew :app:assembleDebug` | ✅ 出包 `app-debug.apk` 103,696,472 字节（约 99 MB）；`classes26.dex` 里能查到 FleetGlassSurface / FleetWallpaper 的符号，证明新代码真进了产物 |
+| `./gradlew :app:assembleDebug` | ✅ 出包 `app-debug.apk` 103,696,492 字节（约 99 MB）；`classes26.dex` 里能查到 FleetGlassSurface / FleetWallpaper 的符号，证明新代码真进了产物 |
 | `./gradlew :app:assembleDebugAndroidTest` | ✅ 编译并打包 `app-debug-androidTest.apk` 4.1 MB。CI 里也跑这一步——**只编译，不运行**（没有设备）。加它是因为 androidTest 里"关于页顶上那行写着 Mika"那条断言早就和界面不一致，而平时没人跑得到 |
 | GitHub Actions（`.github/workflows/ci.yml`） | ✅ `4f0a81f` 起三条 job 全绿（2026-11-02 06:0x 那一次）：`android` 的"跑测试并出包"跑了 442 秒并附上两个 APK，`provenance`、`ios-syntax` 绿。此前 `android` 连红四次，原因见下面那节 |
 | Swift 语法解析（`swiftc -parse`，30 个文件） | ✅ 全过；正对照：故意截断一个文件能报 4 个 error。**这条只到语法**——看不见"某文件没参与编译"和类型错误，上面那节讲的就是它漏掉的东西 |
 | Swift 类型检查与链接、iOS 构建（本机） | ❌ 没做——本机只有 Command Line Tools，没有 Xcode（装它要 Apple ID 且 12 GB 起） |
-| iOS 真编译（CI 的 `ios-build`） | ✅ Xcode 26.3 那支在 `2b4a348` 绿：编 App 与 Widget 扩展用了 101 秒（模拟器、不签名、`DEVELOPMENT_TEAM` 清空）。这是这仓库第一次真的把 Swift 类型检查跑起来。**Xcode 16.4 那支（走 `.ultraThinMaterial` 回退）是这次新加的矩阵项，绿没绿看下一次 run 的读数** |
+| iOS 真编译（CI 的 `ios-build`，两个 Xcode 各一路） | ✅ Xcode 26.3 一路在 `2b4a348` 绿（App 与 Widget 扩展都编，101 秒，模拟器、不签名、`DEVELOPMENT_TEAM` 清空）——这仓库第一次真的做上 Swift 类型检查。❌→ 16.4 一路在 `2235dab` 红，报的是 `has no member 'glassEffect'`，是真 bug（见上节第 3 条），已在这版修掉；**修完绿没绿看下一次 run 的读数** |
 | 跑起来好不好看、滚起来掉不掉帧 | ❌ 没跑过任何一台真机或模拟器 |
 
 **Why：** 这个仓库的立身之处是"没验证的话不写成已验证"。上面这些格子空着，比补一个好看的结论有用。
@@ -129,7 +132,7 @@ cd /tmp/fp-baseline && JAVA_HOME=/opt/homebrew/opt/openjdk@17 ANDROID_HOME=~/Lib
 
 修完：`:app:testDebugUnitTest` 982 条 0 失败。
 
-## iOS：语法检查看不见的两个洞，以及挡住它们的守卫
+## iOS：语法检查看不见的三个洞，以及挡住它们的守卫
 
 `swiftc -parse` 是**逐文件、只到语法**的检查。它看不见两类问题：某个符号根本没参与编译，以及类型不对。
 配色那批改动就撞上第一类，而且是两层：
@@ -159,7 +162,14 @@ cd /tmp/fp-baseline && JAVA_HOME=/opt/homebrew/opt/openjdk@17 ANDROID_HOME=~/Lib
 第一版正是栽在这里（按两个 tab 切块把 target 块切碎了，`compiledByTarget` 是空表，
 于是"所有文件都没编译"被读成"没有文件要编译"，全绿）。
 
-仍然没验到的：Swift 类型检查、真正的构建与签名。`ios/project.yml` 里 `DEVELOPMENT_TEAM: Y726TUG6G3`
+3. 还有一层只在**旧 Xcode** 上才暴露：`App/DeviceChat.swift` 的输入框直接写了 `.glassEffect(...)`，
+   外面只包 `#available(iOS 26.0, *)`。那是运行时判断——旧 SDK 编译期连这个名字都不认识，整包直接编译失败。
+   `2b4a348` 加了 Xcode 16.4 那一路之后当场就红了（26.3 那一路永远看不见这个问题，因为它不需要回退支）。
+   修法是给 `FleetPalette` 再加一个 `fleetGlassBackground`（编译器条件＋运行时判断＋降级都在里面），
+   界面只调它；`IosCompilerGateTest` 再把"别处不许裸调 26-only 的 API"钉住——
+   往 Widget 文件里插一处裸调用，它报的是 `ios/Widgets/MikaWidgets.swift:2`，撤掉就绿。
+
+仍然没验到的：真机运行、签名与上架。`ios/project.yml` 里 `DEVELOPMENT_TEAM: Y726TUG6G3`
 仍是上游作者的签名团队 id，本 fork 换自己的 Apple 账号时要一起改。
 
 ## CI 连红四次的原因：两个环境变量指了两个 SDK

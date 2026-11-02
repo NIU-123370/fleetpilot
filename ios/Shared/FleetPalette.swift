@@ -80,6 +80,30 @@ extension View {
         #endif
     }
 
+    /// 只在**背后**加一层玻璃,不动 content 自己的绘制,还能带一点色调。
+    ///
+    /// 需要单独一个方法的原因很具体:`App/DeviceChat.swift` 的输入框原来是直接写
+    /// `.glassEffect(...)`,外面只包了 `#available(iOS 26.0, *)`——那是**运行时**判断,
+    /// 旧 Xcode 的 SDK 里根本没有这个名字,编译期就红了(CI 的 16.4 那一路真报的正是这条)。
+    /// 编译器条件的圈法不能散在各处靠人记住,收进这一个出口。
+    @ViewBuilder
+    func fleetGlassBackground(cornerRadius: CGFloat = 28, tint: Color = .clear) -> some View {
+        #if compiler(>=6.2)
+        if #available(iOS 26.0, *) {
+            self.background {
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .fill(.clear)
+                    .glassEffect(.regular.tint(tint), in: RoundedRectangle(cornerRadius: cornerRadius))
+                    .allowsHitTesting(false)
+            }
+        } else {
+            self.background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius))
+        }
+        #else
+        self.background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius))
+        #endif
+    }
+
     /// 滚动区里的卡片:半透明不采样背景。长列表逐卡实时模糊会掉帧,所以只有常驻三条边用 `fleetGlass`。
     @ViewBuilder
     func fleetPanel(cornerRadius: CGFloat = 18) -> some View {
