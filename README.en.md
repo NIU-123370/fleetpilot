@@ -170,10 +170,11 @@ Read this before pointing it at devices you care about:
 - **Controllers do not sync.** Groups and settings live on the controller in use; two controllers see two states.
 - **The client identity is still upstream's.** Package name, iOS target and in-app naming are unchanged —
   list in [UPSTREAM.md](UPSTREAM.md).
-- **Nothing here has been verified on real hardware yet.** The UI code has been changed once (single-hue
-  palette and glass materials — see `docs/ui-redesign.md`), but it has **never been compiled or run on a
-  device**: this machine has neither the Android SDK nor Xcode, so verification stops at Swift syntax
-  parsing and a structural check of the Kotlin edits. No "tested on" claim is made anywhere.
+- **Nothing here has been verified on real hardware yet.** The UI code has been changed and **does compile
+  on Android** (`:app:assembleDebug` produces a 95 MB apk), but no line of Swift has been through a compiler
+  (this machine has no Xcode) and nothing has run on a device or simulator. Compiling proves the types, not
+  that the lists stay smooth. The verification boundary is listed per check in UPSTREAM.md, so no
+  "tested on" claim is made anywhere.
 
 ## Development plan
 

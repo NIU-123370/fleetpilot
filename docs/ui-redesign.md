@@ -82,17 +82,16 @@ iOS 差 9 个版本，抬门槛等于丢掉绝大多数用户，只能双轨。
 **Why：** 这是整个衍生项目相对上游的增量所在，界面上没有出口的话，做出来也没人看得见。
 上游现状是执行端回一句"已完成"就结束，没有任何一层判断是不是真做完了。
 
-## 还没验证的（别当成已完成）
+## 还没验证的（别当成已验证）
 
-- **`app` 与 `ios` 都没编译过。** 本机有 JDK 17（`/opt/homebrew/opt/openjdk@17`），但没有 Android SDK，
-  也没有 Xcode（只有 Command Line Tools）。所以 `:app:compileDebugKotlin` 和 iOS 构建都跑不了。
-- **做到的验证：** `./gradlew :core:test` 全跑通过（2426 条，0 失败，2 跳过，含 `DocsConsistencyTest`
-  与 `ReadmeSectionsTest`）；30 个 Swift 文件全部 `swiftc -parse` 通过（正对照：故意截断一个文件能报 4 个 error）；
-  安卓侧改了的三个 Kotlin 文件做了括号平衡与新符号 import/取值核对。
-  **这三项都不等于 `app` 能编译**——界面代码本身仍然没被编译器看过一眼。
-- iOS 26 的 `glassEffect(_:in:)` 调用形状是照公开写法写的，**未经编译验证**；装上 Xcode 后第一件事就是验它。
+- **安卓侧编译过了，iOS 侧没有。** `:app:compileDebugKotlin` 与 `:app:assembleDebug` 通过，
+  出包 95 MB；`:core:test` 2426 条全绿；`:app:testDebugUnitTest` 982 条里 18 条红，
+  与改动前基线**逐条相同**（净回归 0），那 18 条是上游把文案从 Mika 改成 phongent 后没改测试留下的。
+- **iOS 一行没被编译器看过。** 本机只有 Command Line Tools，没有 Xcode（装它要 Apple ID、12 GB 起），
+  所以 `fleetGlass` 里 `glassEffect(_:in:)` 的调用形状仍是照公开文档写的。装上 Xcode 后第一件事就是验它。
 - 没真机跑过：所以"滚动不掉帧""降级档观感可接受"这两句都还是推测。
+  编译通过只证明类型对，不证明 60 fps。
 - minSdk 已从 30 抬到 31，README 与 `docs/install-with-agent*`、`docs/setup-guide*` 里"安卓 11 能装"的说法
-  已一并改掉；**已安装安卓 11 设备的升级路径**这件事没有被验证过，只是被记录了。
+  已一并改掉；**已安装安卓 11 设备的升级路径**没有被验证过，只是被记录了。
 - 抬 minSdk 是**本衍生项目的决定**，不是上游的承诺：上游允许安卓 11 安装（只聊天、文件、上网），
   这里抬到 31 之后那一档不再存在。这条已经写进 README 与安装文档，不是偷偷改一行构建脚本。

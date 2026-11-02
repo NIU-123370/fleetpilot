@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -52,8 +51,10 @@ fun FleetGlassSurface(
     content: @Composable () -> Unit,
 ) {
     val c = MikaTheme.colors
+    // 画布那段 lambda 的接收者是 DrawScope，不是 Composable 上下文，所以 brush 必须先取好
+    val wallpaper = wallpaperBrush()
     Box(modifier.clip(shape).border(1.dp, c.glassEdge, shape)) {
-        Canvas(Modifier.matchParentSize().blur(blurRadius)) { drawRect(brush = wallpaperBrush()) }
+        Canvas(Modifier.matchParentSize().blur(blurRadius)) { drawRect(brush = wallpaper) }
         Box(Modifier.matchParentSize().background(c.glassFill))
         // 上缘高光:一条从白到透明的窄带,是"玻璃"而不是"磨砂塑料"的那一下
         Box(

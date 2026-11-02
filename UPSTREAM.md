@@ -51,16 +51,27 @@ diff -rq -x .git /tmp/upstream /tmp/fleetpilot
 
 | 检查 | 状态 |
 | --- | --- |
-| `./gradlew :core:test`（纯 JVM 模块，含文档一致性测试） | ✅ 2426 条测试，0 失败，2 跳过 |
-| `./gradlew updateReadme` 解开上游带来的 README 死结 | ✅ 跑过，两份 README 由生成器填上 |
+| `./gradlew :core:test`（纯 JVM 模块，含文档一致性测试） | ✅ 2426 条，0 失败，2 跳过 |
+| `./gradlew :app:compileDebugKotlin` | ✅ 通过（先失败两次：`matchParentSize` 不该 import、`@Composable` 不能在 DrawScope 里调用；都已修） |
+| `./gradlew :app:assembleDebug` | ✅ 出包 `app-debug.apk` 95 MB；`classes26.dex` 里能查到 FleetGlassSurface / FleetWallpaper 的符号，证明新代码真进了产物 |
+| `./gradlew :app:testDebugUnitTest` | ⚠️ 982 条，**18 条红**；与改动前基线（提交 `7291fbf` 的 worktree）跑出的 18 条**逐条相同** ⇒ 本批改动净回归 0 条 |
+| 那 18 条红是什么 | 上游遗留：App 文案已被上游从 Mika 改成 phongent，但 17 处测试期望还写着 Mika；另 1 条 `LicensesTest` 说许可页少了 Aora Bot / Mood Mates 两项。**都不是本仓库改出来的** |
 | Swift 语法解析（`swiftc -parse`，30 个文件） | ✅ 全过；正对照：故意截断一个文件能报 4 个 error |
-| Swift 类型检查与链接 | ❌ 没做——本机只有 Command Line Tools，没有 Xcode 与 iOS SDK |
-| Kotlin 括号/引用结构核对 | ✅ 平衡；新符号的 import 与取值逐项对过 |
-| Kotlin 编译（`:app:compileDebugKotlin`） | ❌ 没做——本机没有 Android SDK |
+| Swift 类型检查与链接、iOS 构建 | ❌ 没做——本机只有 Command Line Tools，没有 Xcode（装它要 Apple ID 且 12 GB 起） |
 | iOS 26 的 `glassEffect(_:in:)` 调用形状 | ⚠️ 照公开写法写，未经编译验证；Xcode 装上后第一件事就是验这一行 |
 | 跑起来好不好看、滚起来掉不掉帧 | ❌ 没跑过任何一台真机或模拟器 |
 
 **Why：** 这个仓库的立身之处是"没验证的话不写成已验证"。上面这些格子空着，比补一个好看的结论有用。
+净回归那条为什么重要：18 条红如果只看数字，很容易被写成"改动引入 18 个失败"；
+把改动前的提交单独 checkout 成 worktree 跑同一批用例、再逐条比失败清单，
+才知道这 18 条本来就在——**复现命令**：
+
+```sh
+git worktree add -f /tmp/fp-baseline 7291fbf
+cd /tmp/fp-baseline && JAVA_HOME=/opt/homebrew/opt/openjdk@17 ANDROID_HOME=~/Library/Android/sdk \
+  ./gradlew :app:testDebugUnitTest
+# 再把两边 testDebugUnitTest/*.xml 里的 classname::name 集合 diff 一下
+```
 
 ## 还没改名的部分（二次开发要一起处理的）
 
