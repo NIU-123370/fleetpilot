@@ -1,0 +1,38 @@
+.superpowers/
+build/
+.gradle/
+local.properties
+*.apk
+.idea/
+*.iml
+.DS_Store
+*.local.txt
+.kotlin/
+
+# 本地 Agent 工作树与历史安装包
+.claude/
+dist/
+.omc/
+
+# 给 AI 编程助手的本地规则,只留在本机
+CLAUDE.md
+
+# Remote bridge local secrets and build metadata
+relay/.local/
+ios/*.xcodeproj/xcuserdata/
+*.p8
+*.jks
+*.pem
+
+# Local credentials and generated Apple build output
+.env
+.env.*
+!.env.example
+*.p12
+*.mobileprovision
+DerivedData/
+*.xcarchive/
+
+# Python helper bytecode
+__pycache__/
+*.pyc
