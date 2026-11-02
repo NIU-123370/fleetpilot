@@ -51,6 +51,8 @@ diff -rq -x .git /tmp/upstream /tmp/fleetpilot
 
 | 检查 | 状态 |
 | --- | --- |
+| `./gradlew :core:test`（纯 JVM 模块，含文档一致性测试） | ✅ 2426 条测试，0 失败，2 跳过 |
+| `./gradlew updateReadme` 解开上游带来的 README 死结 | ✅ 跑过，两份 README 由生成器填上 |
 | Swift 语法解析（`swiftc -parse`，30 个文件） | ✅ 全过；正对照：故意截断一个文件能报 4 个 error |
 | Swift 类型检查与链接 | ❌ 没做——本机只有 Command Line Tools，没有 Xcode 与 iOS SDK |
 | Kotlin 括号/引用结构核对 | ✅ 平衡；新符号的 import 与取值逐项对过 |
@@ -88,11 +90,16 @@ diff -rq -x .git /tmp/upstream /tmp/fleetpilot
 上游拉下来的两份 README 里这四对标记**一个都没有**（`grep -c generated README.md` → 0），
 所以 `./gradlew :core:test` 和 `./gradlew updateReadme` 都会在那条 `check` 上失败。
 
-本仓库重写 README 时把四对标记补上了，标记之间先留空。跑一次就能填上并让测试转绿：
+本仓库重写 README 时把四对标记补上了，并**在本机跑过那条命令**：
 
 ```sh
-./gradlew updateReadme
+JAVA_HOME=/opt/homebrew/opt/openjdk@17 ./gradlew updateReadme
 ```
 
-（这条命令我没在本机执行过：它要 JDK 17 加 Android SDK 的完整构建环境，本机没配齐。
-所以标记是照 `ReadmeSections` 的字符串格式手写的，执行结果以你跑出来的为准。）
+结果：`README.md 已更新`、`README.en.md 已更新`，标记之间现在是生成内容。
+随后 `./gradlew :core:test` 全跑一遍：**2426 条测试，0 失败，2 跳过**，
+其中包含 `ReadmeSectionsTest`（README 与源头一致）和 `DocsConsistencyTest`
+（文档里反引号包着的路径与类名必须真实存在、不写死会变的个数）。
+这条能跑是因为 `core` 是纯 JVM 模块、本机有 JDK 17；**`app` 模块仍然没编译过**，它要 Android SDK。
+
+也就是说：上游带过来的这个死结在这里已经解开了，而且解开的方式是仓库自己的工具，不是我手填的。

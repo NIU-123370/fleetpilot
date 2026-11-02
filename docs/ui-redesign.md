@@ -84,10 +84,12 @@ iOS 差 9 个版本，抬门槛等于丢掉绝大多数用户，只能双轨。
 
 ## 还没验证的（别当成已完成）
 
-- **没编译过。** 本机有 JDK 17（`/opt/homebrew/opt/openjdk@17`），但没有 Android SDK，
+- **`app` 与 `ios` 都没编译过。** 本机有 JDK 17（`/opt/homebrew/opt/openjdk@17`），但没有 Android SDK，
   也没有 Xcode（只有 Command Line Tools）。所以 `:app:compileDebugKotlin` 和 iOS 构建都跑不了。
-- **做到的验证只有这些：** 30 个 Swift 文件全部 `swiftc -parse` 通过（正对照：故意截断一个文件能报 4 个 error）；
-  安卓侧改了的三个 Kotlin 文件做了括号平衡与新符号 import/取值核对。这两项都不等于能编译。
+- **做到的验证：** `./gradlew :core:test` 全跑通过（2426 条，0 失败，2 跳过，含 `DocsConsistencyTest`
+  与 `ReadmeSectionsTest`）；30 个 Swift 文件全部 `swiftc -parse` 通过（正对照：故意截断一个文件能报 4 个 error）；
+  安卓侧改了的三个 Kotlin 文件做了括号平衡与新符号 import/取值核对。
+  **这三项都不等于 `app` 能编译**——界面代码本身仍然没被编译器看过一眼。
 - iOS 26 的 `glassEffect(_:in:)` 调用形状是照公开写法写的，**未经编译验证**；装上 Xcode 后第一件事就是验它。
 - 没真机跑过：所以"滚动不掉帧""降级档观感可接受"这两句都还是推测。
 - minSdk 已从 30 抬到 31，README 与 `docs/install-with-agent*`、`docs/setup-guide*` 里"安卓 11 能装"的说法
