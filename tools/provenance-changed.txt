@@ -48,6 +48,7 @@ core/src/test/kotlin/com/wangzan101/mika/core/NoStaleProductNameInUserCopyTest.k
 docs/install-with-agent.en.md
 docs/install-with-agent.md
 docs/media/brand/fleetpilot-logo.png
+docs/roadmap.md
 docs/setup-guide.en.md
 docs/setup-guide.md
 docs/ui-redesign.md

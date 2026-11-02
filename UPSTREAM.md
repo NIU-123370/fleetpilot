@@ -25,6 +25,7 @@
 | `docs/media/brand/fleetpilot-logo.png` | 新增，本仓库自己的标识 |
 | `UPSTREAM.md` | 本文件 |
 | `docs/ui-redesign.md` | 新增，界面重设计的决策记录（配色口径、材质矩阵、逐屏清单） |
+| `docs/roadmap.md` | 顶上补一句：这份是**上游**的路线图，本衍生项目自己的计划在 `README.md` 的「二次开发计划」 |
 | `docs/setup-guide.md`、`.en.md` | 安卓 11 那一档随 minSdk 抬到 31 后不再存在，逐条改写 |
 | `docs/install-with-agent.md`、`.en.md` | 同上；另外第 2 步从"到上游 release 页下载 APK"改成"在本机从源码构建"，并写明不要拿上游的包顶替（理由见下节） |
 | `app/src/main/java/com/wangzan101/mika/ui/theme/Colors.kt` | 调色板改成单色相（紫），新增 wallTop / wallBottom / glassFill / glassHi |
