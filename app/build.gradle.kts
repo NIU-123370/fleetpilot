@@ -15,7 +15,7 @@ android {
 
     defaultConfig {
         applicationId = "com.wangzan101.mika"
-        minSdk = 30
+        minSdk = 31
         targetSdk = 35
         versionCode = 10012
         versionName = "1.0.12-phongent"

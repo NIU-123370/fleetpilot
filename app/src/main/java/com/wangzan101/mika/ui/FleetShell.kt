@@ -19,6 +19,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import com.wangzan101.mika.remote.FleetController
 import com.wangzan101.mika.remote.readLimited
+import com.wangzan101.mika.ui.theme.FleetGlassSurface
+import com.wangzan101.mika.ui.theme.FleetWallpaper
+import com.wangzan101.mika.ui.theme.GlassShape
+import com.wangzan101.mika.ui.theme.MikaTheme
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
@@ -109,13 +113,13 @@ fun FleetShell(localChat:@Composable ()->Unit) {
     renaming?.let{device->AlertDialog(onDismissRequest={renaming=null},title={Text("设备信息")},text={Column{OutlinedTextField(value=newName,onValueChange={newName=it.take(40)},label={Text("名称")},singleLine=true);OutlinedTextField(value=newGroup,onValueChange={newGroup=it.take(40)},label={Text("分组，留空取消")},singleLine=true)}},confirmButton={TextButton(enabled=newName.isNotBlank(),onClick={val name=newName;val group=newGroup;request{try{controller.rename(device.id,name);controller.setGroup(device.id,group);renaming=null}catch(e:Exception){connectionError="重命名失败："+(e.message ?: "请检查连接")}}}){Text("保存")}},dismissButton={TextButton(onClick={renaming=null}){Text("取消")}})}
     if(savingTemplate)AlertDialog(onDismissRequest={savingTemplate=false},title={Text("保存任务模板")},text={OutlinedTextField(value=templateName,onValueChange={templateName=it.take(40)},label={Text("名称")})},confirmButton={TextButton(enabled=templateName.isNotBlank(),onClick={templates=templates+(templateName.trim() to input.take(8000));savingTemplate=false}){Text("保存")}},dismissButton={TextButton(onClick={savingTemplate=false}){Text("取消")}})
     if(clearHistory)AlertDialog(onDismissRequest={clearHistory=false},title={Text("删除聊天记录？")},text={Text("删除此主控上的群聊记录。")},confirmButton={TextButton(onClick={log=emptyList();controller.history.clear();clearHistory=false}){Text("删除")}},dismissButton={TextButton(onClick={clearHistory=false}){Text("取消")}})
-    Column(Modifier.fillMaxSize().statusBarsPadding().imePadding()){
+    FleetWallpaper{Column(Modifier.fillMaxSize().statusBarsPadding().imePadding()){
         Box(Modifier.weight(1f)){
             when(tab){
                 0->FleetRadar(devices,busy,status,onChat={device->target=if(device.id=="local")null else device.id;tab=1},onEdit={device->renaming=device;newName=device.name;newGroup=groups[device.id] ?: ""},onConnect={device->request{try{controller.connect(device);status="已连接 ${device.name}";target=device.id;tab=1}catch(e:Exception){connectionError=e.message ?: "重连失败"}}},connecting=connecting,groups=groups,onGroup={ids,name->ids.forEach{controller.setGroup(it,name)}},onConnectAll={targets->request{val failures=controller.connectAll(targets);if(failures.isNotEmpty())connectionError="连接失败："+failures.joinToString("、")}})
                 1->if(target==null)localChat() else Column(Modifier.fillMaxSize()){
                 Row(Modifier.weight(1f)){
-                    LazyColumn(Modifier.width(76.dp)){
+                    LazyColumn(Modifier.width(76.dp).background(MikaTheme.colors.glassFill)){
                         item{TextButton(onClick={target="all";activeGroup=null}){Text("全部")}}
                         devices.filter{it.connected}.groupBy{groups[it.id] ?: "默认组"}.toSortedMap().forEach{(group,members)->
                             item(key="group:$group"){Row{TextButton(onClick={target="all";activeGroup=group},modifier=Modifier.weight(1f),contentPadding=PaddingValues(0.dp)){Text(group,style=MaterialTheme.typography.labelSmall)};TextButton(onClick={collapsedGroups=if(group in collapsedGroups)collapsedGroups-group else collapsedGroups+group},modifier=Modifier.width(24.dp),contentPadding=PaddingValues(0.dp)){Text(if(group in collapsedGroups)"›" else "⌄")}}}
@@ -157,7 +161,7 @@ fun FleetShell(localChat:@Composable ()->Unit) {
                         TextButton(enabled=!busy,onClick={pendingSends=emptyList();status=""}){Text("结束本次发送")}
                     }
                     Row(Modifier.fillMaxWidth(),verticalAlignment=androidx.compose.ui.Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)){
-                    TextField(value=input,onValueChange={input=it},enabled=!busy && pendingSends.isEmpty(),placeholder={Text("发消息或描述任务")},minLines=1,maxLines=5,shape=RoundedCornerShape(20.dp),colors=TextFieldDefaults.colors(focusedIndicatorColor=androidx.compose.ui.graphics.Color.Transparent,unfocusedIndicatorColor=androidx.compose.ui.graphics.Color.Transparent,focusedContainerColor=MaterialTheme.colorScheme.surface,unfocusedContainerColor=MaterialTheme.colorScheme.surface),modifier=Modifier.weight(1f))
+                    TextField(value=input,onValueChange={input=it},enabled=!busy && pendingSends.isEmpty(),placeholder={Text("发消息或描述任务")},minLines=1,maxLines=5,shape=RoundedCornerShape(20.dp),colors=TextFieldDefaults.colors(focusedIndicatorColor=androidx.compose.ui.graphics.Color.Transparent,unfocusedIndicatorColor=androidx.compose.ui.graphics.Color.Transparent,focusedContainerColor=MikaTheme.colors.glassFill,unfocusedContainerColor=MikaTheme.colors.glassFill),modifier=Modifier.weight(1f))
                     IconButton(enabled=!busy && pendingSends.isEmpty(),onClick={picker.launch("image/*")},modifier=Modifier.size(44.dp)){androidx.compose.foundation.Canvas(Modifier.size(30.dp)){val c=androidx.compose.ui.graphics.Color.Gray;drawCircle(c,style=androidx.compose.ui.graphics.drawscope.Stroke(2.dp.toPx()));drawLine(c,androidx.compose.ui.geometry.Offset(size.width*.25f,center.y),androidx.compose.ui.geometry.Offset(size.width*.75f,center.y),2.dp.toPx());drawLine(c,androidx.compose.ui.geometry.Offset(center.x,size.height*.25f),androidx.compose.ui.geometry.Offset(center.x,size.height*.75f),2.dp.toPx())}}
                     Button(enabled=!busy && pendingSends.isEmpty() && input.isNotBlank(),onClick={
                         focus.clearFocus();keyboard?.hide()
@@ -181,6 +185,10 @@ fun FleetShell(localChat:@Composable ()->Unit) {
                 3->FleetManagementHome(controller,devices)
             }
         }
-        if(!imeVisible)NavigationBar{listOf("设备","agent","消息","设置").forEachIndexed{index,title->NavigationBarItem(selected=tab==index,onClick={tab=index},icon={Icon(listOf(com.wangzan101.mika.ui.theme.MikaIcons.Phone,com.wangzan101.mika.ui.theme.MikaIcons.Spark,com.wangzan101.mika.ui.theme.MikaIcons.Message,com.wangzan101.mika.ui.theme.MikaIcons.Gear)[index],contentDescription=title)},label={Text(title)})}}
-    }
+        if(!imeVisible)FleetGlassSurface(Modifier.padding(horizontal=10.dp,vertical=6.dp),GlassShape.Bar){
+            NavigationBar(containerColor=androidx.compose.ui.graphics.Color.Transparent,tonalElevation=0.dp){
+                listOf("设备","agent","消息","设置").forEachIndexed{index,title->NavigationBarItem(selected=tab==index,onClick={tab=index},icon={Icon(listOf(com.wangzan101.mika.ui.theme.MikaIcons.Phone,com.wangzan101.mika.ui.theme.MikaIcons.Spark,com.wangzan101.mika.ui.theme.MikaIcons.Message,com.wangzan101.mika.ui.theme.MikaIcons.Gear)[index],contentDescription=title)},label={Text(title)})}
+            }
+        }
+    }}
 }
