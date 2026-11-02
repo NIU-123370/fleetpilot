@@ -32,6 +32,8 @@
 | `app/src/main/java/com/wangzan101/mika/ui/FleetShell.kt` | 根节点铺壁纸；底部导航、输入框、设备侧栏改玻璃/半透明 |
 | `app/build.gradle.kts` | minSdk 30 → 31（背景模糊要 API 31） |
 | `ios/Shared/FleetPalette.swift` | 新增：与安卓同一套单色相 token、壁纸、`fleetGlass`（iOS 26 系统材质，17–19 退回超薄材质） |
+| `ios/MikaRemote.xcodeproj/project.pbxproj` | 上面那个新文件挂进工程：主 App 与 Widget 扩展两边的 Sources 阶段都要（`Widgets/MikaWidgets.swift` 也在用同一批 token）。Xcode 工程按名字逐个列源码，新增文件不会自己进去 |
+| `core/src/test/kotlin/com/wangzan101/mika/core/IosProjectFileListTest.kt` | 新增守卫：磁盘上的 .swift 与工程里的文件引用、两边 Sources 阶段双向核对（见下节） |
 | `ios/App`、`ios/Shared`、`ios/Widgets` 下若干 Swift 文件 | 散落的系统彩色（mint/teal/orange/red/green/blue/purple/pink）换成同一套 token；头像逐机色相旋转收敛到紫带 |
 | `app/src/main/java/com/wangzan101/mika/capsule/CapsuleContent.kt` | 胶囊里两处写死的 `"Mika"` 改成 `tr(R.string.app_name)`（上游改名漏了它们，胶囊会一半念 phongent 一半念 Mika） |
 | `app/src/main/java/com/wangzan101/mika/ui/LicensesScreen.kt` | 许可页补上 `Aora Bot / Mood Mates` 一条——`THIRD_PARTY_NOTICES.md` 有它，许可页漏列是合规问题 |
@@ -84,14 +86,15 @@ diff -rq -x .git /tmp/upstream /tmp/fleetpilot
 
 | 检查 | 状态 |
 | --- | --- |
-| `./gradlew :core:test`（纯 JVM 模块，含文档一致性测试） | ✅ 2426 条，0 失败，2 跳过 |
+| `./gradlew :core:test`（纯 JVM 模块，含文档一致性测试与上面那节 iOS 工程守卫） | ✅ 2433 条，0 失败，2 跳过 |
 | `./gradlew :app:testDebugUnitTest` | ✅ 986 条，**0 失败**（原来 18 条红，见下一节，已修；之后新增 4 条用例） |
 | `./gradlew :app:compileDebugKotlin` | ✅ 通过（先失败两次：`matchParentSize` 不该 import、`@Composable` 不能在 DrawScope 里调用；都已修） |
 | `./gradlew :app:assembleDebug` | ✅ 出包 `app-debug.apk` 103,696,472 字节（约 99 MB）；`classes26.dex` 里能查到 FleetGlassSurface / FleetWallpaper 的符号，证明新代码真进了产物 |
 | `./gradlew :app:assembleDebugAndroidTest` | ✅ 编译并打包 `app-debug-androidTest.apk` 4.1 MB。CI 里也跑这一步——**只编译，不运行**（没有设备）。加它是因为 androidTest 里"关于页顶上那行写着 Mika"那条断言早就和界面不一致，而平时没人跑得到 |
-| GitHub Actions（`.github/workflows/ci.yml`） | ❌ 到 `e679b98` 为止 `android` 连红四次、没绿过；`ios-syntax` 与 `provenance` 绿。第四次的注释拿到了真原因（两个 SDK 环境变量指两个目录，见下面那节），修在下一次推送里——**那一跑绿没绿要以 Actions 的读数为准，别按这行推断** |
-| Swift 语法解析（`swiftc -parse`，30 个文件） | ✅ 全过；正对照：故意截断一个文件能报 4 个 error |
-| Swift 类型检查与链接、iOS 构建 | ❌ 没做——本机只有 Command Line Tools，没有 Xcode（装它要 Apple ID 且 12 GB 起） |
+| GitHub Actions（`.github/workflows/ci.yml`） | ✅ `4f0a81f` 起三条 job 全绿（2026-11-02 06:0x 那一次）：`android` 的"跑测试并出包"跑了 442 秒并附上两个 APK，`provenance`、`ios-syntax` 绿。此前 `android` 连红四次，原因见下面那节 |
+| Swift 语法解析（`swiftc -parse`，30 个文件） | ✅ 全过；正对照：故意截断一个文件能报 4 个 error。**这条只到语法**——看不见"某文件没参与编译"和类型错误，上面那节讲的就是它漏掉的东西 |
+| Swift 类型检查与链接、iOS 构建（本机） | ❌ 没做——本机只有 Command Line Tools，没有 Xcode（装它要 Apple ID 且 12 GB 起） |
+| iOS 真编译（CI 的 `ios-build` job） | ⚠️ 刚加的一步：macos-15 + Xcode 26.3，模拟器、不签名，编 `MikaRemote`（连带 Widget 扩展）。**绿没绿以下一次 run 的读数为准**，别按这行推断 |
 | 跑起来好不好看、滚起来掉不掉帧 | ❌ 没跑过任何一台真机或模拟器 |
 
 **Why：** 这个仓库的立身之处是"没验证的话不写成已验证"。上面这些格子空着，比补一个好看的结论有用。
@@ -125,6 +128,37 @@ cd /tmp/fp-baseline && JAVA_HOME=/opt/homebrew/opt/openjdk@17 ANDROID_HOME=~/Lib
    已把这一条补进 `Licenses.ENTRIES`。
 
 修完：`:app:testDebugUnitTest` 982 条 0 失败。
+
+## iOS：语法检查看不见的两个洞，以及挡住它们的守卫
+
+`swiftc -parse` 是**逐文件、只到语法**的检查。它看不见两类问题：某个符号根本没参与编译，以及类型不对。
+配色那批改动就撞上第一类，而且是两层：
+
+1. 新加的 `ios/Shared/FleetPalette.swift` 写进了磁盘，七十多个文件引用它的 token，
+   而 `ios/MikaRemote.xcodeproj/project.pbxproj` 里**一处都没有**——Xcode 工程按名字逐个列源码，
+   新增文件不会自己进去。这条 parse 检查全绿也照样发现不了。
+   （上游用 `ios/project.yml` + XcodeGen 生成工程，按目录收源码；提交进仓库的那份 `.xcodeproj` 是生成结果，
+   只有重新生成才带上新文件。）
+2. 补上主 App 之后才发现还有第二边：`Widgets/MikaWidgets.swift` 也在用同一批 token，
+   所以 `Shared/` 的文件必须**同时**出现在两个 target 的 Sources 阶段里，只补一边照样编译不过。
+
+为此加了 `core/src/test/kotlin/com/wangzan101/mika/core/IosProjectFileListTest.kt`：
+磁盘上的 .swift 与工程里的 `PBXFileReference`、两个 target 各自的 Sources 阶段做双向核对，
+`Shared/` 单独要求两边都有。它自己不依赖 Xcode，所以本机、CI 都跑得到。
+
+守卫本身验过两次投毒（不验不算数）：
+
+| 投毒 | 红的那条 |
+| --- | --- |
+| 只摘掉 Widget 一边的阶段条目 | `sharedSourcesCompileIntoEveryTarget`（另外六条全绿，说明这两条不是同一件事） |
+| 两边的阶段条目都摘掉 | 上面那条 + `everySwiftFileIsCompiledBySomeTarget` |
+
+还有一处防"守卫自己空跑"的断言：解析不出 `MikaRemote` 与 `MikaWidgets` 两个 target 就直接失败——
+第一版正是栽在这里（按两个 tab 切块把 target 块切碎了，`compiledByTarget` 是空表，
+于是"所有文件都没编译"被读成"没有文件要编译"，全绿）。
+
+仍然没验到的：Swift 类型检查、真正的构建与签名。`ios/project.yml` 里 `DEVELOPMENT_TEAM: Y726TUG6G3`
+仍是上游作者的签名团队 id，本 fork 换自己的 Apple 账号时要一起改。
 
 ## CI 连红四次的原因：两个环境变量指了两个 SDK
 
@@ -162,6 +196,9 @@ ubuntu-latest 镜像自带一个 SDK，并用 `ANDROID_SDK_ROOT` 指过去；我
 `:core:test` 在 `ANDROID_HOME` 指向一个空目录时**照样过**（rc=0，120 秒）——纯 JVM 模块不需要安卓 SDK；
 本机 `licenses/android-sdk-license` 只有一个摘要（41 字节，`\n24333f8a…1fee`），CI 预置的是它的超集；
 `platforms;android-36` 与 `build-tools;36.0.0` 在 Google 的 `repository2-3.xml` 里确实列着。
+
+改完的下一次推送（`4f0a81f`）三条 job 全绿：`android` 的"跑测试并出包"这一步跑了 442 秒——
+这是这个仓库的 CI 第一次真的把测试跑起来。
 
 ## 还没改名的部分（二次开发要一起处理的）
 
@@ -211,7 +248,7 @@ JAVA_HOME=/opt/homebrew/opt/openjdk@17 ./gradlew updateReadme
 ```
 
 结果：`README.md 已更新`、`README.en.md 已更新`，标记之间现在是生成内容。
-随后 `./gradlew :core:test` 全跑一遍：**2426 条测试，0 失败，2 跳过**，
+随后 `./gradlew :core:test` 全跑一遍：**0 失败，2 跳过**（条数随用例增加会变，现算：`grep -ho 'tests="[0-9]*"' core/build/test-results/test/*.xml`），
 其中包含 `ReadmeSectionsTest`（README 与源头一致）和 `DocsConsistencyTest`
 （文档里反引号包着的路径与类名必须真实存在、不写死会变的个数）。
 这条能跑是因为 `core` 是纯 JVM 模块、本机有 JDK 17；**`app` 模块仍然没编译过**，它要 Android SDK。

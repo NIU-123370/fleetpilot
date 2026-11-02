@@ -140,8 +140,53 @@ jobs:
           echo "--- 本仓库相对上游的差异（应与 UPSTREAM.md 的表一致）---"
           diff -rq -x .git /tmp/upstream "$GITHUB_WORKSPACE" | sed "s|$GITHUB_WORKSPACE|.|" || true
 
-  # iOS：这里只做到语法解析。真编译要 Xcode 与签名，本机没有，
-  # 所以这一步不许写成"构建通过"。
+  # iOS：真编译。语法级检查在下面那条里，那条看不见"符号根本没参与编译"和类型错误——
+  # FleetPalette.swift 漏挂进工程那两次就都是 parse 全绿、真编译必红的。
+  #
+  # macos-15 镜像上默认是 Xcode 16.4，这里显式切到 26.3：Liquid Glass 的 API 只随 Xcode 26 的 SDK 提供，
+  # 而 FleetPalette.swift 里那段是 #if compiler(>=6.2) 圈住的——不切过去就只会编到回退分支，
+  # 我新写的那一半等于没编译过。
+  ios-build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: 选 Xcode 26.3
+        run: |
+          set -euo pipefail
+          sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+          xcodebuild -version
+
+      - name: 工程里有哪几个 scheme
+        run: xcodebuild -project ios/MikaRemote.xcodeproj -list
+
+      - name: 编 App 与 Widget 扩展（模拟器，不签名）
+        run: |
+          set -uo pipefail
+          # DEVELOPMENT_TEAM 清空：project.yml 里那个 Y726TUG6G3 是上游作者的签名团队。
+          if xcodebuild -project ios/MikaRemote.xcodeproj -scheme MikaRemote \
+               -destination 'generic/platform=iOS Simulator' -configuration Debug \
+               CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY='' DEVELOPMENT_TEAM='' \
+               build > /tmp/xcodebuild.log 2>&1; then
+            tail -4 /tmp/xcodebuild.log
+          else
+            grep -E "error:|fatal error" /tmp/xcodebuild.log | head -12
+            reason=$(grep -m1 -E "error:|fatal error" /tmp/xcodebuild.log | cut -c1-360 | sed 's/%/%25/g')
+            [ -n "$reason" ] || reason=$(tail -2 /tmp/xcodebuild.log | tr '\n' ' ' | cut -c1-360 | sed 's/%/%25/g')
+            echo "::error::iOS 编译失败：${reason}"
+            exit 1
+          fi
+
+      - name: 上传编译日志
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: xcodebuild-log
+          path: /tmp/xcodebuild.log
+          if-no-files-found: ignore
+
+  # 只到语法解析的一条独立检查：它比上面那条便宜，且 macos-14 上就能跑。
   #
   # 另外记一笔真实的坑：液态玻璃的 API 只随 Xcode 26 的 SDK 提供。
   # FleetPalette.swift 里那段用 #if compiler(>=6.2) 圈住了——
