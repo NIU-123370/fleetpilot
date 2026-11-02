@@ -32,11 +32,14 @@ app/src/main/java/com/wangzan101/mika/ui/AboutCopy.kt
 app/src/main/java/com/wangzan101/mika/ui/AboutScreen.kt
 app/src/main/java/com/wangzan101/mika/ui/ChatCopy.kt
 app/src/main/java/com/wangzan101/mika/ui/FleetAvatar.kt
+app/src/main/java/com/wangzan101/mika/ui/FleetManagement.kt
 app/src/main/java/com/wangzan101/mika/ui/FleetShell.kt
 app/src/main/java/com/wangzan101/mika/ui/LicensesScreen.kt
 app/src/main/java/com/wangzan101/mika/ui/McpScreen.kt
+app/src/main/java/com/wangzan101/mika/ui/SettingsScreen.kt
 app/src/main/java/com/wangzan101/mika/ui/theme/Colors.kt
 app/src/main/java/com/wangzan101/mika/ui/theme/Glass.kt
+app/src/main/java/com/wangzan101/mika/ui/theme/Tokens.kt
 app/src/main/res/drawable-nodpi/ic_launcher_foreground.png
 app/src/main/res/drawable-nodpi/mika_launcher_art.png
 app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
@@ -122,6 +125,7 @@ core/src/test/kotlin/com/wangzan101/mika/core/IosCompilerGateTest.kt
 core/src/test/kotlin/com/wangzan101/mika/core/IosProjectFileListTest.kt
 core/src/test/kotlin/com/wangzan101/mika/core/NoStaleProductNameInUserCopyTest.kt
 core/src/test/kotlin/com/wangzan101/mika/core/chatgpt/ChatGptAuthTest.kt
+docs/architecture.md
 docs/install-with-agent.en.md
 docs/install-with-agent.md
 docs/media/brand/fleetpilot-logo.png

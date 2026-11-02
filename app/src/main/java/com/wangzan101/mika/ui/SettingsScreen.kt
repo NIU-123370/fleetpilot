@@ -53,7 +53,11 @@ import com.wangzan101.mika.ui.components.RowValue
 import com.wangzan101.mika.ui.components.StateCard
 import com.wangzan101.mika.ui.components.StatusPill
 import com.wangzan101.mika.ui.components.TileTone
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import com.wangzan101.mika.ui.theme.MikaIcons
+import com.wangzan101.mika.ui.theme.MikaSize
+import com.wangzan101.mika.ui.theme.MikaSpace
 import com.wangzan101.mika.core.usage.UsageQuery
 import com.wangzan101.mika.core.usage.UsageRange
 import com.wangzan101.mika.i18n.AppLanguage
@@ -351,6 +355,9 @@ fun SettingsContent(
                 RowChevron()
             }
         }
+        // 底部导航是悬浮胶囊，而 PageScaffold 只为系统手势条留了内边距：不补这一段，
+        // 「关于」这张卡片会正好压在胶囊底下——模拟器上滚到底也点不到（2026-11-02 复核）。
+        Spacer(Modifier.height(MikaSize.NavBar + MikaSpace.S8))
     }
 }
 

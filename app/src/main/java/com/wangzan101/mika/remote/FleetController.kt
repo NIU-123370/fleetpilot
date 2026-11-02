@@ -87,8 +87,10 @@ class FleetController(context:Context) {
                         val host=info.host?.hostAddress ?: return
                         val address=if(host.contains(':'))"[$host]" else host
                         // 最后那条是框架按单字节字符集解的实例名，中文会烂成 "äº‘å®"（见 DeviceName 的注释）。
-                        val name=prefs.getString("name:$id",null) ?: info.attributes["name"]?.toString(Charsets.UTF_8)
-                            ?: DeviceName.repair(info.serviceName)
+                        // 两条路都过一遍 repair：对端也可能把中文按单字节塞进 TXT。
+                        // repair 对正常中文/西文原样返回（它一看到真·多字节字符就放弃改），所以不会改坏。
+                        val advertised=info.attributes["name"]?.toString(Charsets.UTF_8)?.let(DeviceName::repair)
+                        val name=prefs.getString("name:$id",null) ?: advertised ?: DeviceName.repair(info.serviceName)
                         val device=Device(id,name,"http://$address:${info.port}")
                         val prior=mutable.value.firstOrNull{it.id==id}
                         if(prior!=null && prior.url!=device.url){

@@ -41,6 +41,8 @@ object MikaSpace {
 /** 各类元素的尺寸。 */
 object MikaSize {
     val TopBar = 56.dp
+    /** 底部导航条（Material3 NavigationBar 的默认高）。页面底部要给它让出位置。 */
+    val NavBar = 80.dp
     val IconButton = 40.dp
     val RowMin = 52.dp
     val Button = 52.dp

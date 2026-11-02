@@ -159,6 +159,7 @@ fun FleetManagementHome(controller:FleetController,devices:List<FleetController.
     val showWindows by controller.showWindows.collectAsState()
     var dispatch by remember{mutableStateOf(controller.dispatchModel)}
     var page by remember{mutableStateOf<String?>(null)}
+
     androidx.activity.compose.BackHandler(page!=null){page=null}
     when(val selected=page){
         "localModels"->ModelSetupScreen(providers,false,onBack={page=null},onDone={page=null})
@@ -187,6 +188,9 @@ fun FleetManagementHome(controller:FleetController,devices:List<FleetController.
                     }
                 }
             }
+            // 版本信息放在设置页底部：关于页本身在对话页的左侧菜单里，而那是另一套页面栈，
+            // 从外壳的设置页跳不过去（MikaRoot 只有在没选设备时才被渲染）。这里只摆事实，不做跳转。
+            item{Card(modifier=Modifier.fillMaxWidth(),shape=androidx.compose.foundation.shape.RoundedCornerShape(18.dp),colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surfaceContainerLow)){Column(Modifier.fillMaxWidth().padding(horizontal=20.dp,vertical=18.dp)){Text(androidx.compose.ui.res.stringResource(com.wangzan101.mika.R.string.app_name),style=MaterialTheme.typography.bodyLarge);Text("版本 "+com.wangzan101.mika.BuildConfig.VERSION_NAME+"（构建 "+com.wangzan101.mika.BuildConfig.GIT_HASH+"）",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant);Text("上游 mylea1/phongent · 本 fork 由 NIU-123370 维护",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}}}
         }
         else->Column{TextButton(onClick={page=null}){Text("返回设置")};key(selected){if(selected=="files")FleetFiles(controller,devices) else if(selected=="queue")FleetQueueView(controller,devices) else if(selected in listOf("usage","diagnostics"))FleetReports(controller,devices,selected=="usage") else FleetManagement(controller,devices,selected)}}
     }
