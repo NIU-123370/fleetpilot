@@ -127,18 +127,35 @@ jobs:
           name: app-debug
           path: app/build/outputs/apk/debug/*.apk
 
-  # 出处核对：UPSTREAM.md 承诺"和上游 diff 出来只有表里那些文件"，那就每天真 diff 一次。
-  # 这一步只打印，不判定——判定标准是人写的差异表，机器不替人更新它。
+  # 出处核对：UPSTREAM.md 承诺"和上游 diff 出来只有表里那些文件"，那就每天真 diff 一次并判定。
+  # 以前只打印不判定，那句话等于印在纸上。
+  #
+  # 钉在拉下来那一笔提交上，不跟着上游 main 走：上游继续演进的话，这条核对会把别人新改的
+  # 文件也算成"本仓库动了代码"，红得和本仓库没有任何关系。
   provenance:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      UPSTREAM_SHA: 0b57e35d4e4c8460fdd87fcd33f751f764e7423d
     steps:
       - uses: actions/checkout@v7
-      - name: 与上游 0b57e35d 逐文件比对
+      - name: 取上游那一笔提交
         run: |
-          git clone --depth 1 https://github.com/mylea1/phongent.git /tmp/upstream
-          echo "--- 本仓库相对上游的差异（应与 UPSTREAM.md 的表一致）---"
-          diff -rq -x .git /tmp/upstream "$GITHUB_WORKSPACE" | sed "s|$GITHUB_WORKSPACE|.|" || true
+          set -euo pipefail
+          git init -q /tmp/upstream
+          git -C /tmp/upstream remote add origin https://github.com/mylea1/phongent.git
+          git -C /tmp/upstream fetch -q --depth 1 origin "$UPSTREAM_SHA"
+          git -C /tmp/upstream checkout -q FETCH_HEAD
+          test "$(git -C /tmp/upstream rev-parse HEAD)" = "$UPSTREAM_SHA"
+      - name: 差异必须与 tools/provenance-changed.txt 申报的完全一致
+        run: |
+          set -uo pipefail
+          cd "$GITHUB_WORKSPACE"
+          if ! python3 tools/provenance_check.py /tmp/upstream . ; then
+            echo "--- 逐条差异（供人对照 UPSTREAM.md 那张表）---"
+            diff -rq -x .git /tmp/upstream . | sed "s|$GITHUB_WORKSPACE|.|" || true
+            exit 1
+          fi
 
   # iOS：真编译。语法级检查在下面那条里，那条看不见"符号根本没参与编译"和类型错误——
   # FleetPalette.swift 漏挂进工程那两次就都是 parse 全绿、真编译必红的。

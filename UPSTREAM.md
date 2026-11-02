@@ -49,6 +49,7 @@
 | `app/src/main/java/com/wangzan101/mika/ui/AboutCopy.kt`、`AboutScreen.kt` | 「关于」页加一行上游出处，并把"没有 release"单独提示出来 |
 | `app/src/main/res/values*/strings_about.xml`（简中、繁中、英文） | 同上三条文案；"上游作者"这个改法把 wangzan101 的微博/微信标成**上游的个人渠道**，不是本项目的客服入口 |
 | `app/src/test/java/com/wangzan101/mika/about/`（`UpdateCheckerTest.kt`、`MikaLinksTest.kt`、`ApkIntegrityTest.kt`） | 404 与"发布后清标记"两条新用例、上游出处在改名后仍在用例里、`ApkIntegrity` 的可信下载白名单跟着 `RELEASES` 改（**上游的 APK 现在会被拒**，见下节） |
+| `tools/provenance_check.py`、`tools/provenance-changed.txt` | 新增：把"diff 出来只有表里那些文件"变成机器判定——逐文件清单 + 双向核对（没申报 / 已陈旧都红） |
 | `.github/workflows/ci.yml` | 新增：安卓全套（测试＋出包＋编译 androidTest）、与上游逐文件比对、iOS 语法解析、iOS 真编译（Xcode 26.3 与 16.4 两支） |
 | `.git` | 未继承上游历史，从零开始提交；出处以本文件与两份 README 顶部标注为准 |
 
@@ -77,13 +78,28 @@
 
 ## 怎么核对改了哪些
 
+上面那张表是人写的，机器读不动它，所以另有一份逐文件清单 `tools/provenance-changed.txt`，
+由 `tools/provenance_check.py` 核对。本机跑（要先把上游拉到 /tmp/upstream）：
+
 ```sh
-git clone --depth 1 https://github.com/mylea1/phongent.git /tmp/upstream
-git clone --depth 1 https://github.com/NIU-123370/fleetpilot.git /tmp/fleetpilot
-diff -rq -x .git /tmp/upstream /tmp/fleetpilot
+git init /tmp/upstream
+git -C /tmp/upstream remote add origin https://github.com/mylea1/phongent.git
+git -C /tmp/upstream fetch --depth 1 origin 0b57e35d4e4c8460fdd87fcd33f751f764e7423d
+git -C /tmp/upstream checkout FETCH_HEAD
+python3 tools/provenance_check.py /tmp/upstream .
 ```
 
-输出应当只有上表列出的那些文件。**多出来任何一条，说明有人在没更新本表的情况下动了代码。**
+不一致只有两种，都会一条条列出来：**改了但没申报**（动了代码没更新清单与上表），
+和**申报了却已不存在差异**（某处改动被撤回去了，清单却没跟着删）。两种都判红。
+改完代码重新生成：`python3 tools/provenance_check.py /tmp/upstream . --write`。
+
+CI 的 `provenance` 那条 job 每天跑同一个脚本，并且**钉在拉下来那一笔提交上**——
+跟着上游 main 走的话，上游自己继续演进就会把别人的改动算成"本仓库动了代码"，
+红得和本仓库无关。这个判定是后加的：在那之前，本文件那句话只是印在纸上，
+job 只打印不判定。
+
+两条投毒都验过：往 `LICENSE` 后面加一行 → 报"改了但没申报: LICENSE"；
+把 `README.md` 换成上游那份 → 报"申报了却已不存在差异: README.md"。撤掉后回到"一致"。
 
 ## 这批界面改动验证到什么程度（别当成已验证）
 
@@ -97,7 +113,7 @@ diff -rq -x .git /tmp/upstream /tmp/fleetpilot
 | GitHub Actions（`.github/workflows/ci.yml`） | ✅ `4f0a81f` 起三条 job 全绿（2026-11-02 06:0x 那一次）：`android` 的"跑测试并出包"跑了 442 秒并附上两个 APK，`provenance`、`ios-syntax` 绿。此前 `android` 连红四次，原因见下面那节 |
 | Swift 语法解析（`swiftc -parse`，30 个文件） | ✅ 全过；正对照：故意截断一个文件能报 4 个 error。**这条只到语法**——看不见"某文件没参与编译"和类型错误，上面那节讲的就是它漏掉的东西 |
 | Swift 类型检查与链接、iOS 构建（本机） | ❌ 没做——本机只有 Command Line Tools，没有 Xcode（装它要 Apple ID 且 12 GB 起） |
-| iOS 真编译（CI 的 `ios-build`，两个 Xcode 各一路） | ✅ Xcode 26.3 一路在 `2b4a348` 绿（App 与 Widget 扩展都编，101 秒，模拟器、不签名、`DEVELOPMENT_TEAM` 清空）——这仓库第一次真的做上 Swift 类型检查。❌→ 16.4 一路在 `2235dab` 红，报的是 `has no member 'glassEffect'`，是真 bug（见上节第 3 条），已在这版修掉；**修完绿没绿看下一次 run 的读数** |
+| iOS 真编译（CI 的 `ios-build`，两个 Xcode 各一路） | ✅ 两路都绿：26.3 在 `2b4a348`（App 与 Widget 扩展都编，101 秒，模拟器、不签名、`DEVELOPMENT_TEAM` 清空），16.4 在 `3e74c90`。中间 16.4 那一路在 `2235dab` 红过一次，报 `has no member 'glassEffect'`——是真 bug，见上节第 3 条。这仓库第一次真的做上 Swift 类型检查 |
 | 跑起来好不好看、滚起来掉不掉帧 | ❌ 没跑过任何一台真机或模拟器 |
 
 **Why：** 这个仓库的立身之处是"没验证的话不写成已验证"。上面这些格子空着，比补一个好看的结论有用。
