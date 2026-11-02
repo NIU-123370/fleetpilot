@@ -13,12 +13,12 @@ permissions:
   contents: read
 
 env:
-  ANDROID_HOME: ${{ github.workspace }}/android-sdk
   JAVA_VERSION: "17"
 
 jobs:
   # 安卓侧全套：纯 JVM 模块 + app 单元测试 + 出包。
-  # 这三步在 2026-11-02 的本机都真跑过（core 2426 条 0 失败、app 982 条 0 失败、apk 95 MB），
+  # 这三步在 2026-11-02 的本机真跑过：core 2426 条 0 失败（2 跳过）、app 985 条 0 失败、
+  # 出包 103,695,204 字节的 app-debug.apk。数是从 test-results/*.xml 现加的，不是抄的。
   # 所以这条 job 红了就是真红了，不是环境差异。
   android:
     runs-on: ubuntu-latest
@@ -32,6 +32,10 @@ jobs:
       - name: 装 Android SDK（cmdline-tools + platform 36 + build-tools 36）
         run: |
           set -euo pipefail
+          # SDK 不放在检出目录里：ANDROID_HOME 原来等于 ${{ github.workspace }}/android-sdk，
+          # 等于往仓库工作树里塞十万个文件，而 core 里有几个测试会遍历仓库根目录。
+          export ANDROID_HOME="$HOME/android-sdk"
+          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
           mkdir -p "$ANDROID_HOME/cmdline-tools" "$ANDROID_HOME/licenses"
           curl -fsSL -o /tmp/clt.zip \
             https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
@@ -45,11 +49,38 @@ jobs:
           printf '\n84831b9409646a918e30573bab4c9c91346d8abd\n' \
             > "$ANDROID_HOME/licenses/android-sdk-preview-license"
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
-            "platform-tools" "platforms;android-36" "build-tools;36.0.0" > /dev/null
+            "platform-tools" "platforms;android-36" "build-tools;36.0.0" 2>&1 | tail -5
+          # 这一步上一次"绿"得可疑：整个 job 只跑了 56 秒，装 SDK 只用了 6 秒，
+          # 而 gradle 那条 43 秒就红、一条测试结果都没留下（artifact 数为 0）。
+          # sdkmanager 在拿不到许可或软件包时可以是 0 退出但不装东西，所以这里不认它的退出码，只认目录。
+          test -d "$ANDROID_HOME/platforms/android-36"        || { echo "::error::platforms/android-36 没装上"; exit 1; }
+          test -d "$ANDROID_HOME/build-tools/36.0.0"          || { echo "::error::build-tools/36.0.0 没装上"; exit 1; }
+          test -x "$ANDROID_HOME/platform-tools/adb"          || { echo "::error::platform-tools(adb) 没装上"; exit 1; }
           echo "已装：$(ls "$ANDROID_HOME/platforms") / $(ls "$ANDROID_HOME/build-tools")"
 
+      # 单独一步：上一条 job 红了 43 秒、一条测试结果都没留下，分不清是 wrapper 拉不到发行版、
+      # 依赖解析不了，还是编译本身失败。拆成一步之后，红的名字本身就是答案。
+      - name: Gradle 起得来吗（发行版与插件解析）
+        run: ./gradlew --version --console=plain
+
       - name: 跑测试并出包
-        run: ./gradlew :core:test :app:testDebugUnitTest :app:assembleDebug --stacktrace
+        run: |
+          set -uo pipefail
+          if ./gradlew :core:test :app:testDebugUnitTest :app:assembleDebug \
+               --stacktrace --console=plain > /tmp/gradle.log 2>&1; then
+            tail -6 /tmp/gradle.log
+          else
+            echo "----- gradle 失败原因（全文在 artifact gradle-log 里）-----"
+            sed -n '/What went wrong/,/^\* Try/p' /tmp/gradle.log | head -30
+            tail -20 /tmp/gradle.log
+            # 红要能自己讲清楚为什么红：日志下载要登录，注释不用。
+            # 这里取"What went wrong"那一段压成一行写成 ::error::，Actions 页面和公开 API 都能读到。
+            reason=$(sed -n '/What went wrong/,/^\* Try/p' /tmp/gradle.log \
+              | tr -d '\r' | tr '\n' ' ' | tr -s ' ' | cut -c1-360 | sed 's/%/%25/g')
+            [ -n "$reason" ] || reason=$(tail -3 /tmp/gradle.log | tr '\n' ' ' | cut -c1-360 | sed 's/%/%25/g')
+            echo "::error::${reason}"
+            exit 1
+          fi
 
       # 红的时候报告比日志有用：直接下 artifact 看是哪条断言。
       - name: 上传测试报告
@@ -60,6 +91,15 @@ jobs:
           path: |
             core/build/test-results
             app/build/test-results
+          if-no-files-found: ignore
+
+      # 构建日志失败时也留一份：上面那行 ::error:: 只有 360 字，全文得靠这个。
+      - name: 上传 gradle 输出
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: gradle-log
+          path: /tmp/gradle.log
           if-no-files-found: ignore
 
       - name: 上传 APK

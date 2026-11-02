@@ -25,7 +25,8 @@
 | `docs/media/brand/fleetpilot-logo.png` | 新增，本仓库自己的标识 |
 | `UPSTREAM.md` | 本文件 |
 | `docs/ui-redesign.md` | 新增，界面重设计的决策记录（配色口径、材质矩阵、逐屏清单） |
-| `docs/install-with-agent.md`、`.en.md`、`docs/setup-guide.md`、`.en.md` | 安卓 11 那一档随 minSdk 抬到 31 后不再存在，逐条改写 |
+| `docs/setup-guide.md`、`.en.md` | 安卓 11 那一档随 minSdk 抬到 31 后不再存在，逐条改写 |
+| `docs/install-with-agent.md`、`.en.md` | 同上；另外第 2 步从"到上游 release 页下载 APK"改成"在本机从源码构建"，并写明不要拿上游的包顶替（理由见下节） |
 | `app/src/main/java/com/wangzan101/mika/ui/theme/Colors.kt` | 调色板改成单色相（紫），新增 wallTop / wallBottom / glassFill / glassHi |
 | `app/src/main/java/com/wangzan101/mika/ui/theme/Glass.kt` | 新增：壁纸与玻璃面板，零第三方依赖 |
 | `app/src/main/java/com/wangzan101/mika/ui/FleetShell.kt` | 根节点铺壁纸；底部导航、输入框、设备侧栏改玻璃/半透明 |
@@ -84,7 +85,7 @@ diff -rq -x .git /tmp/upstream /tmp/fleetpilot
 | `./gradlew :app:testDebugUnitTest` | ✅ 985 条，**0 失败**（原来 18 条红，见下一节，已修；后来新增 3 条用例） |
 | `./gradlew :app:compileDebugKotlin` | ✅ 通过（先失败两次：`matchParentSize` 不该 import、`@Composable` 不能在 DrawScope 里调用；都已修） |
 | `./gradlew :app:assembleDebug` | ✅ 出包 `app-debug.apk` 103,695,204 字节（约 99 MB）；`classes26.dex` 里能查到 FleetGlassSurface / FleetWallpaper 的符号，证明新代码真进了产物 |
-| GitHub Actions（`.github/workflows/ci.yml`） | ⚠️ 三条 job 已写（安卓全套 / 出处核对 / iOS 语法解析）。第一条 CI 在 20 秒内红过：`yes \| sdkmanager --licenses` 在 `set -euo pipefail` 下被 SIGPIPE 打断（本机复现过，改成预置许可文件）；**改完之后的那条绿没绿，要看这一版推送后 Actions 的读数，别按上面这行推断** |
+| GitHub Actions（`.github/workflows/ci.yml`） | ❌ **还没绿过。** 三条 job 里 `ios-syntax` 与 `provenance` 绿，`android` 连红三次；原因未知，见下面那节 |
 | Swift 语法解析（`swiftc -parse`，30 个文件） | ✅ 全过；正对照：故意截断一个文件能报 4 个 error |
 | Swift 类型检查与链接、iOS 构建 | ❌ 没做——本机只有 Command Line Tools，没有 Xcode（装它要 Apple ID 且 12 GB 起） |
 | 跑起来好不好看、滚起来掉不掉帧 | ❌ 没跑过任何一台真机或模拟器 |
@@ -120,6 +121,39 @@ cd /tmp/fp-baseline && JAVA_HOME=/opt/homebrew/opt/openjdk@17 ANDROID_HOME=~/Lib
    已把这一条补进 `Licenses.ENTRIES`。
 
 修完：`:app:testDebugUnitTest` 982 条 0 失败。
+
+## CI 连红三次，卡在哪一步之前只能靠猜——现在让它自己报
+
+`android` 这条 job 从没绿过。能读到的公开读数只有这些（都是这一轮从 GitHub 公共 API 现查的）：
+
+| 提交 | 装 SDK 那步 | 跑测试那步 | artifact 数 |
+| --- | --- | --- | --- |
+| `4ff2fdf` | ❌ 6 秒 | 跳过 | 0 |
+| `e001a1e` | ✅ 19 秒 | ❌ 72 秒 | 0 |
+| `25c59e7` | ✅ 6 秒 | ❌ 43 秒 | 0 |
+
+`4ff2fdf` 那条的原因已经查实并修掉了：`yes \| sdkmanager --licenses` 里 `yes` 被 SIGPIPE 打成 141，
+`set -o pipefail` 把它算成整步失败（本机复现过）。改成预置许可文件后这一步绿了。
+
+后面两条为什么红，**不知道**：Actions 的日志下载要登录，未认证请求回 403，
+注释（annotation）里只有一句 `Process completed with exit code 1`。
+能确定的只有边界：这条 job 一个 artifact 都没留下，而 `if-no-files-found: ignore` 意味着
+`core/build/test-results` 和 `app/build/test-results` 都不存在——一条测试结果都没跑出来。
+
+为此做的四件事，都不是"猜一个原因去修"，是让下一次红自己讲清楚：
+
+1. 拆出单独一步 `./gradlew --version`：如果红在这里，就是 wrapper 或依赖解析的问题，与编译无关。
+2. 装完 SDK 后**断言目录存在**（`platforms/android-36`、`build-tools/36.0.0`、`platform-tools/adb`）。
+   上面那张表里"6 秒装完"太可疑，而 `sdkmanager` 可以 0 退出却不装东西；不认它的退出码，只认目录。
+3. 失败时把日志里 `What went wrong` 那段压成一行写成 `::error::` 注释——注释不需要登录就能读，
+   日志需要。两条分支都在本机拿假日志验过：有那段时取到 119 个字符，没有时兜底取末尾三行。
+4. `ANDROID_HOME` 从 `${{ github.workspace }}/android-sdk` 挪到 `$HOME/android-sdk`：
+   放在检出目录里等于往仓库工作树塞十万个文件，而 `core` 里有几个测试会遍历仓库根目录。
+
+顺带把三条只有本机才量得到的事实记下来，免得下次又当谜猜：
+`:core:test` 在 `ANDROID_HOME` 指向一个空目录时**照样过**（rc=0，120 秒）——纯 JVM 模块不需要安卓 SDK；
+本机 `licenses/android-sdk-license` 只有一个摘要（41 字节，`\n24333f8a…1fee`），CI 预置的是它的超集；
+`platforms;android-36` 与 `build-tools;36.0.0` 在 Google 的 `repository2-3.xml` 里确实列着。
 
 ## 还没改名的部分（二次开发要一起处理的）
 

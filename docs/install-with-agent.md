@@ -7,7 +7,7 @@
 如果你是用户：把手机用数据线连上电脑，在手机上打开 USB 调试，然后把这句话发给电脑上的 AI 助手：
 
 ```
-请按 https://github.com/wangzan101/Mika/blob/main/docs/install-with-agent.md 的步骤，帮我把 Mika 安装到通过 USB 连着的安卓手机上。
+请按 https://github.com/NIU-123370/fleetpilot/blob/main/docs/install-with-agent.md 的步骤，帮我把这个 App 安装到通过 USB 连着的安卓手机上。
 ```
 
 如果你是 AI 助手：先读完「规则」，再从第 1 步开始，一步一步做。
@@ -67,35 +67,38 @@ adb shell getprop ro.product.cpu.abi
 - `arm64-v8a`：Linux 沙箱可用。
 - 其他值：Mika 照常能装能用，只是没有 Linux 沙箱（设置里会显示「此设备不支持」）。告诉用户一声即可，继续。
 
-## 第 2 步：下载最新的 APK
+## 第 2 步：在电脑上构建 APK
 
-从 GitHub 接口取最新版本，选名字形如 `Mika-v*.apk` 的那个文件，用它的 `browser_download_url` 下载：
+**本仓库不发布安装包**（GitHub 上没有 release），APK 只能从源码在这台电脑上构建。
 
+不要去上游的 release 页下载现成的包：`wangzan101/Mika` 和 `mylea1/phongent` 上的 APK 是上游的产物，
+代码与本仓库不同、签名也不同，装上手机的是上游那个 App，不是这个衍生项目。本仓库的 App 只把
+本仓库自己的发布地址当可信更新源，从别处装包等于绕开这条边界，之后的「检查更新」也对不上号。
+
+在仓库根目录跑（构建要 JDK 17 和 Android SDK，靠环境变量指过去）：
+
+```sh
+JAVA_HOME=<JDK 17 的目录> ANDROID_HOME=<Android SDK 的目录> ./gradlew :app:assembleDebug
+ls -l app/build/outputs/apk/debug/app-debug.apk
 ```
-URL=$(curl -fsSL https://api.github.com/repos/wangzan101/Mika/releases/latest \
-  | grep -o '"browser_download_url": *"[^"]*/Mika-v[^"]*\.apk"' \
-  | sed 's/.*"\(https[^"]*\)"/\1/' | head -n 1)
-echo "$URL"
-curl -fL -o Mika.apk "$URL"
-```
 
-成功：`$URL` 形如 `https://github.com/wangzan101/Mika/releases/download/v0.1.N/Mika-v0.1.N.apk`，`curl` 没有报错，当前目录下有下载完的 `Mika.apk`。
+成功：最后一条列出一个约 99 MB 的 `app-debug.apk`（里面打包了 Linux 沙箱的运行环境，所以这么大）。
 
-电脑上有 jq 的话，用它解析 JSON 更稳；做法一样，取 `assets` 里名字匹配 `Mika-v*.apk` 的那一项。
-
-连不上 GitHub：请用户在浏览器里打开 [Releases](https://github.com/wangzan101/Mika/releases/latest)，手动下载 APK，告诉你文件存在哪，再从第 3 步继续。
+- 报 `JAVA_HOME is not set` 或编译版本不对：这台电脑没有 JDK 17，请用户装好后把路径给你。
+- 报找不到 SDK 或 `sdkmanager`：请用户装 Android SDK（或用 Android Studio 装一次）。**不要替用户下载和安装 SDK。**
+- 用户只想拿现成的包、不想在这台电脑上构建：说明本仓库只提供源码，然后停下，等用户决定，不要转去装上游的包。
 
 ## 第 3 步：安装
 
 ```
-adb install -r Mika.apk
+adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
 成功：最后一行是 `Success`。
 
 - 有的手机通过 USB 安装时，会在手机上弹出确认框。请用户看着手机，出现时点「允许」或「安装」。命令会等到用户点完。
 - 失败时把错误原文给用户看。常见的：
-  - `INSTALL_FAILED_UPDATE_INCOMPATIBLE`：手机上已经装了一份签名不同的 Mika（比如自己编译的版本）。要装新的只能先卸载旧的，**旧的里面的对话和设置会丢**。说明这一点，问用户要不要自己去卸载；不要替用户卸载。用户卸载后再运行安装命令。
+  - `INSTALL_FAILED_UPDATE_INCOMPATIBLE`：手机上已经装了一份签名不同的 Mika（自己编译的版本，或从上游 release 页装的正式包）。要装新的只能先卸载旧的，**旧的里面的对话和设置会丢**。说明这一点，问用户要不要自己去卸载；不要替用户卸载。用户卸载后再运行安装命令。
   - `INSTALL_FAILED_VERSION_DOWNGRADE`：手机上的 Mika 比要装的更新，不用装了，直接到第 4 步。
   - `INSTALL_FAILED_USER_RESTRICTED` 或 `INSTALL_FAILED_ABORTED`：用户在手机上拒绝了，或者系统禁止通过 USB 安装。请用户在开发者选项里找「通过 USB 安装」之类的开关并打开（部分手机才有），然后重试。
   - `INSTALL_FAILED_INSUFFICIENT_STORAGE`：手机存储不够，请用户清理一些空间。
@@ -298,7 +301,7 @@ adb shell settings get secure enabled_accessibility_services
 | 安装被拦下 | 请用户看手机上有没有确认框；在开发者选项里打开「通过 USB 安装」之类的开关（如果有）。签名不同的报错见第 3 步，卸载由用户决定。 |
 | 无障碍过一会儿又关了 | 再做一次第 5 步。配对过无线调试的话，Mika 会自己把它重新打开（设置 › 恢复与修复 里默认开着）。 |
 | 重启后手机助手没在运行 | 做过 A：连上 Wi-Fi 等一会儿，Mika 会自己恢复；不行就在 设置 › 手机操作 里点「重新配对」。只做过 B：再连电脑运行一次第 7 步 B 的命令，或者改做 A。 |
-| 连不上 GitHub | 请用户在浏览器里打开 [Releases](https://github.com/wangzan101/Mika/releases/latest) 手动下载 APK，然后 `adb install -r <APK 文件路径>`。 |
+| 构建不出 `app-debug.apk` | 本机缺 JDK 17 或 Android SDK，两条都写在第 2 步；这两样要用户自己装。本仓库没有现成的安装包可下，也不要改去下载上游的包。 |
 | 无线调试打不开 | 手机要连着 Wi-Fi；在弹框里允许在此网络上使用无线调试。实在不行就用 B。 |
 | AI 工具经 USB 连不上 Mika（第 10 步） | 再运行一次 `adb forward tcp:8765 tcp:8765`（每次拔插数据线后都要）。手机重启过的话，再运行一次第 10 步打开的那条命令，并换上新令牌。 |
 | 转发报 `cannot bind`，或连上后返回的不是 Mika 的内容（第 10 步） | 电脑上 8765 端口被别的程序占了。换一个空闲端口转发，比如 `adb forward tcp:18765 tcp:8765`，配置里的地址改成 `http://127.0.0.1:18765/mcp`；手机那边不用改。 |
