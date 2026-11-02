@@ -36,6 +36,9 @@
 | `app/src/main/java/com/wangzan101/mika/capsule/CapsuleContent.kt` | 胶囊里两处写死的 `"Mika"` 改成 `tr(R.string.app_name)`（上游改名漏了它们，胶囊会一半念 phongent 一半念 Mika） |
 | `app/src/main/java/com/wangzan101/mika/ui/LicensesScreen.kt` | 许可页补上 `Aora Bot / Mood Mates` 一条——`THIRD_PARTY_NOTICES.md` 有它，许可页漏列是合规问题 |
 | `app/src/test/**`、`app/src/androidTest/**`（10 个文件） | 把 17 处还写着 Mika 的文案期望对齐到实际文案；URL 里的 `wangzan101/Mika` 一律没动 |
+| `ui/ChatCopy.kt`、`ui/AboutScreen.kt`、`ui/McpScreen.kt`、`capsule/CapsuleCardModel.kt`、`capsule/CapsuleCardContent.kt`、`about/ApkUpdater.kt`、`about/Diagnostics.kt`、`about/UpdateChecker.kt`、`MikaApp.kt`、`settings/ProviderStore.kt`、`values-zh`/`values-b+zh+Hant/strings_chat.xml` | 界面上还写死自己名字的地方全部接到 `R.string.app_name` 这一个来源：对话页顶栏、关于页图标下面那行、卡片抬头（两处）、复制给剪贴板的标签、下载通知标题、诊断信息表头、发给模型服务与 GitHub 的 User-Agent、示例文案的繁简两版 |
+| `ui/LicensesScreen.kt` | 许可页的源码说明改成指本仓库真的有的文件（`tools/sandbox/sources.lock`、`patches/`、`build-native.sh`、`runtime-sources.py`），并写明这个仓库还没有发布页；顺手删掉那条列出来只为按名字滤掉的"App 自己" |
+| `LicensesTest.kt`、`ChatCopyTest.kt`、`UpdateCheckerTest.kt`、`androidTest/AboutScreenTest.kt` | 钉死旧名字的三条期望改成跟同一个来源；新增"许可页指的脚本必须真存在"和"许可页与声明文件双向一一对应"两条用例 |
 | `app/src/main/java/com/wangzan101/mika/about/MikaLinks.kt` | 对外地址分成两组：反馈/发布页/检查更新指向本仓库，上游两级（phongent、mika）作为 `UPSTREAM_*` 保留并显示在「关于」页 |
 | `app/src/main/java/com/wangzan101/mika/about/UpdateChecker.kt` | 新增 `CheckStatus.NoReleases`：查发布吃 404 是"这个仓库还没发布过"，不是"连不上"（本 fork 现在正是前者） |
 | `app/src/main/java/com/wangzan101/mika/ui/AboutCopy.kt`、`AboutScreen.kt` | 「关于」页加一行上游出处，并把"没有 release"单独提示出来 |
@@ -82,10 +85,11 @@ diff -rq -x .git /tmp/upstream /tmp/fleetpilot
 | 检查 | 状态 |
 | --- | --- |
 | `./gradlew :core:test`（纯 JVM 模块，含文档一致性测试） | ✅ 2426 条，0 失败，2 跳过 |
-| `./gradlew :app:testDebugUnitTest` | ✅ 985 条，**0 失败**（原来 18 条红，见下一节，已修；后来新增 3 条用例） |
+| `./gradlew :app:testDebugUnitTest` | ✅ 986 条，**0 失败**（原来 18 条红，见下一节，已修；之后新增 4 条用例） |
 | `./gradlew :app:compileDebugKotlin` | ✅ 通过（先失败两次：`matchParentSize` 不该 import、`@Composable` 不能在 DrawScope 里调用；都已修） |
-| `./gradlew :app:assembleDebug` | ✅ 出包 `app-debug.apk` 103,695,204 字节（约 99 MB）；`classes26.dex` 里能查到 FleetGlassSurface / FleetWallpaper 的符号，证明新代码真进了产物 |
-| GitHub Actions（`.github/workflows/ci.yml`） | ❌ **还没绿过。** 三条 job 里 `ios-syntax` 与 `provenance` 绿，`android` 连红三次；原因未知，见下面那节 |
+| `./gradlew :app:assembleDebug` | ✅ 出包 `app-debug.apk` 103,696,472 字节（约 99 MB）；`classes26.dex` 里能查到 FleetGlassSurface / FleetWallpaper 的符号，证明新代码真进了产物 |
+| `./gradlew :app:assembleDebugAndroidTest` | ✅ 编译并打包 `app-debug-androidTest.apk` 4.1 MB。CI 里也跑这一步——**只编译，不运行**（没有设备）。加它是因为 androidTest 里"关于页顶上那行写着 Mika"那条断言早就和界面不一致，而平时没人跑得到 |
+| GitHub Actions（`.github/workflows/ci.yml`） | ❌ 到 `e679b98` 为止 `android` 连红四次、没绿过；`ios-syntax` 与 `provenance` 绿。第四次的注释拿到了真原因（两个 SDK 环境变量指两个目录，见下面那节），修在下一次推送里——**那一跑绿没绿要以 Actions 的读数为准，别按这行推断** |
 | Swift 语法解析（`swiftc -parse`，30 个文件） | ✅ 全过；正对照：故意截断一个文件能报 4 个 error |
 | Swift 类型检查与链接、iOS 构建 | ❌ 没做——本机只有 Command Line Tools，没有 Xcode（装它要 Apple ID 且 12 GB 起） |
 | 跑起来好不好看、滚起来掉不掉帧 | ❌ 没跑过任何一台真机或模拟器 |
@@ -122,33 +126,37 @@ cd /tmp/fp-baseline && JAVA_HOME=/opt/homebrew/opt/openjdk@17 ANDROID_HOME=~/Lib
 
 修完：`:app:testDebugUnitTest` 982 条 0 失败。
 
-## CI 连红三次，卡在哪一步之前只能靠猜——现在让它自己报
+## CI 连红四次的原因：两个环境变量指了两个 SDK
 
-`android` 这条 job 从没绿过。能读到的公开读数只有这些（都是这一轮从 GitHub 公共 API 现查的）：
+`android` 这条 job 从没绿过。前四次能读到的公开读数只有这些（都是这一轮从 GitHub 公共 API 现查的）：
 
 | 提交 | 装 SDK 那步 | 跑测试那步 | artifact 数 |
 | --- | --- | --- | --- |
 | `4ff2fdf` | ❌ 6 秒 | 跳过 | 0 |
 | `e001a1e` | ✅ 19 秒 | ❌ 72 秒 | 0 |
 | `25c59e7` | ✅ 6 秒 | ❌ 43 秒 | 0 |
+| `e679b98` | ✅ 8 秒（并按目录断言过）| ❌ 56 秒 | 0 |
 
-`4ff2fdf` 那条的原因已经查实并修掉了：`yes \| sdkmanager --licenses` 里 `yes` 被 SIGPIPE 打成 141，
+`4ff2fdf` 那条的原因当场查实并修掉了：`yes \| sdkmanager --licenses` 里 `yes` 被 SIGPIPE 打成 141，
 `set -o pipefail` 把它算成整步失败（本机复现过）。改成预置许可文件后这一步绿了。
 
-后面两条为什么红，**不知道**：Actions 的日志下载要登录，未认证请求回 403，
-注释（annotation）里只有一句 `Process completed with exit code 1`。
-能确定的只有边界：这条 job 一个 artifact 都没留下，而 `if-no-files-found: ignore` 意味着
-`core/build/test-results` 和 `app/build/test-results` 都不存在——一条测试结果都没跑出来。
+后三条一直红在同一个地方，而日志下载要登录（未认证回 403），注释里只有一句 `Process completed with exit code 1`。
+所以第四次没再猜，改成让失败自己讲话：单拆一步 `./gradlew --version`、装完 SDK 断言目录真的存在、
+把日志里 `What went wrong` 那段压成一行写成 `::error::` 注释（注释不要登录就能读），全文另存 artifact。
 
-为此做的四件事，都不是"猜一个原因去修"，是让下一次红自己讲清楚：
+第五次推送跑出来，答案就在注释里：
 
-1. 拆出单独一步 `./gradlew --version`：如果红在这里，就是 wrapper 或依赖解析的问题，与编译无关。
-2. 装完 SDK 后**断言目录存在**（`platforms/android-36`、`build-tools/36.0.0`、`platform-tools/adb`）。
-   上面那张表里"6 秒装完"太可疑，而 `sdkmanager` 可以 0 退出却不装东西；不认它的退出码，只认目录。
-3. 失败时把日志里 `What went wrong` 那段压成一行写成 `::error::` 注释——注释不需要登录就能读，
-   日志需要。两条分支都在本机拿假日志验过：有那段时取到 119 个字符，没有时兜底取末尾三行。
-4. `ANDROID_HOME` 从 `${{ github.workspace }}/android-sdk` 挪到 `$HOME/android-sdk`：
-   放在检出目录里等于往仓库工作树塞十万个文件，而 `core` 里有几个测试会遍历仓库根目录。
+```
+What went wrong: Could not determine the dependencies of task ':app:testDebugUnitTest'.
+> Several environment variables and/or system properties contain different paths to the SDK.
+  ANDROID_HOME: /home/runner/android-sdk
+  ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+```
+
+ubuntu-latest 镜像自带一个 SDK，并用 `ANDROID_SDK_ROOT` 指过去；我只设了 `ANDROID_HOME`，
+两个变量指了两个目录，AGP 直接拒绝算依赖。**这条错误发生在依赖解析阶段**，
+所以一条测试结果都不会留下——这正好是前三次"红得看不出原因"的样子。
+修法是把两个变量写成同一个目录，并在 `./gradlew` 之前自己检查一遍、不对就自己报一行。
 
 顺带把三条只有本机才量得到的事实记下来，免得下次又当谜猜：
 `:core:test` 在 `ANDROID_HOME` 指向一个空目录时**照样过**（rc=0，120 秒）——纯 JVM 模块不需要安卓 SDK；
@@ -164,6 +172,19 @@ cd /tmp/fp-baseline && JAVA_HOME=/opt/homebrew/opt/openjdk@17 ANDROID_HOME=~/Lib
 - 源码目录树按包名组织：`app/src/main/java/com/wangzan101/mika/`、`core/src/*/kotlin/com/wangzan101/mika/`
 - 界面文案、通知渠道、无障碍服务名里出现的 `Mika` 字样
 - 构建产物名沿用上游（本仓库不发布 release，README 里也不挂上游的 APK 下载链）
+
+这一轮把"界面上说自己是谁"接到了一个来源之后，剩下的 `Mika` 都归在下面这三类，各自都有不动的理由：
+
+1. **标识符，不是文案**：`MikaTheme`、`MikaButton`、`MikaType`、`Theme.Mika` 这两个样式名、
+   `res/drawable-nodpi/mika_launcher_art` 这类资源名。改它们等于全仓重命名，和上面包名那条是同一件事。
+2. **落在设备上的名字**：`AndroidManifest.xml` 里通知监听服务的 `android:label="Mika 消息同步"`（在系统"通知使用权"列表里显示），
+   以及导出文件用的目录 `Download/Mika/`、相册里的 `Pictures/Mika/`。目录名不能随意改——
+   `ShareExporter` 是按那个路径找回之前导出的文件的，改了旧文件就"消失"了；服务标签要改得连着系统设置里的授权状态看，本机没有设备可验。
+3. **有功能作用的字符串**：`ShellService` 的 `CLIP_LABEL`（它同时是"这段剪贴板内容是不是我们自己写的"的判据，
+   两处必须同值），以及喂给模型的屏幕状态描述里那句 "on Mika's screen"（改了要重跑评测才知道有没有影响）。
+
+`docs/architecture.md` 里"只接受官方仓库 `releases/download/` 下的 HTTPS 地址"这类描述仍然是对的——
+"官方"现在指本仓库，代码里的白名单跟着 `MikaLinks.RELEASES` 走。
 
 改这些不是重命名一个字符串：包名一变，已安装设备的升级路径、无障碍服务的已授权状态、
 以及 `docs/` 里大量按包路径写的说明都要跟着动。真要改名，单开一笔提交做，别和二次开发混在一起。

@@ -36,6 +36,13 @@ jobs:
           # 等于往仓库工作树里塞十万个文件，而 core 里有几个测试会遍历仓库根目录。
           export ANDROID_HOME="$HOME/android-sdk"
           echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
+          # 这条 job 连红四次的真正原因在这里：ubuntu-latest 的镜像自带一个 SDK，并把
+          # ANDROID_SDK_ROOT 指向 /usr/local/lib/android/sdk。只改 ANDROID_HOME 的话，
+          # AGP 看到两个不同的 SDK 路径就拒绝工作——报的是
+          # "Several environment variables ... contain different paths to the SDK"，
+          # 而且是在 :app:testDebugUnitTest 解析依赖时，一条测试结果都不会留下。
+          # 两个变量必须指同一个目录。
+          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> "$GITHUB_ENV"
           mkdir -p "$ANDROID_HOME/cmdline-tools" "$ANDROID_HOME/licenses"
           curl -fsSL -o /tmp/clt.zip \
             https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
@@ -61,12 +68,23 @@ jobs:
       # 单独一步：上一条 job 红了 43 秒、一条测试结果都没留下，分不清是 wrapper 拉不到发行版、
       # 依赖解析不了，还是编译本身失败。拆成一步之后，红的名字本身就是答案。
       - name: Gradle 起得来吗（发行版与插件解析）
-        run: ./gradlew --version --console=plain
+        run: |
+          set -euo pipefail
+          # 两个 SDK 变量指不同目录时，AGP 报的不是"哪一步错了"而是"给我看产物都看不出来"，
+          # 所以这条先自己查、自己说。
+          if [ -n "${ANDROID_SDK_ROOT:-}" ] && [ "$ANDROID_SDK_ROOT" != "$ANDROID_HOME" ]; then
+            echo "::error::ANDROID_SDK_ROOT 与 ANDROID_HOME 指到两个目录，AGP 会直接拒绝构建"
+            exit 1
+          fi
+          ./gradlew --version --console=plain
 
       - name: 跑测试并出包
+        # :app:assembleDebugAndroidTest 在这里只编译、不跑（没有设备）。
+        # 加它的原因很具体：androidTest 里"关于页顶上那行是 Mika"那条断言早就和界面不一致了，
+        # 而它平时谁也跑不到——至少编译能写错资源 id 这种事挡住。
         run: |
           set -uo pipefail
-          if ./gradlew :core:test :app:testDebugUnitTest :app:assembleDebug \
+          if ./gradlew :core:test :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest \
                --stacktrace --console=plain > /tmp/gradle.log 2>&1; then
             tail -6 /tmp/gradle.log
           else
