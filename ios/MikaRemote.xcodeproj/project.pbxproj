@@ -29,12 +29,14 @@
 		942B9787B7AA684B9B417BF5 /* AgentEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 825F59A794D144045BB4E076 /* AgentEvent.swift */; };
 		A478F9577C019BB0E91C32DD /* RemoteVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4995B853E002A50B91779B5C /* RemoteVideo.swift */; };
 		B9F6927F037A401662E4756B /* AgentState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8ED87B67B36BCEEDCFD0AE /* AgentState.swift */; };
+		AB12F0E7A5B0C9D4E6A70002 /* FleetPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12F0E7A5B0C9D4E6A70001 /* FleetPalette.swift */; };
 		BB1A1B9D48CFAA916B460F69 /* DeviceChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD615A35FB92273EE56A278A /* DeviceChat.swift */; };
 		CC273118EFF9BB8551121CC9 /* NearbyHub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6864C0C5BF38BB5A2A64684A /* NearbyHub.swift */; };
 		D02D63F15CA880F49C0F46E6 /* ModelAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7222E24853D73B12435F5FD /* ModelAccount.swift */; };
 		D21DE65305C64CDA44D522E9 /* DeviceWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85DA543DCBC7EF4406481DB7 /* DeviceWorkspace.swift */; };
 		D79C6EB890B628B13FFA936C /* MessageGrouping.swift in Sources */ = {isa = PBXBuildFile; fileRef = A86C6CBF058F8EA1407F6613 /* MessageGrouping.swift */; };
 		D8C1C8C390961A82C8C68149 /* AgentState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8ED87B67B36BCEEDCFD0AE /* AgentState.swift */; };
+		AB12F0E7A5B0C9D4E6A70003 /* FleetPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB12F0E7A5B0C9D4E6A70001 /* FleetPalette.swift */; };
 		E00EA2E12AEFF69E4DF2ECD1 /* MikaWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 783985BB09C360D62F5B0DA5 /* MikaWidgets.swift */; };
 		E3965EA1B0C02420A3F8FB1C /* NearbyRadar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06AE4F48D6B808B9B5B56C83 /* NearbyRadar.swift */; };
 		E74E6B074C2D37DD7627E006 /* ModelWire.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B854931928AE1E02B7C72D7 /* ModelWire.swift */; };
@@ -87,6 +89,7 @@
 		4995B853E002A50B91779B5C /* RemoteVideo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteVideo.swift; sourceTree = "<group>"; };
 		5A7075A18AD45F4C396BC224 /* ModelCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelCatalog.swift; sourceTree = "<group>"; };
 		5F8ED87B67B36BCEEDCFD0AE /* AgentState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentState.swift; sourceTree = "<group>"; };
+		AB12F0E7A5B0C9D4E6A70001 /* FleetPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FleetPalette.swift; sourceTree = "<group>"; };
 		6864C0C5BF38BB5A2A64684A /* NearbyHub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbyHub.swift; sourceTree = "<group>"; };
 		783985BB09C360D62F5B0DA5 /* MikaWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MikaWidgets.swift; sourceTree = "<group>"; };
 		79503055E8D5A1E8072414EC /* ModelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelProvider.swift; sourceTree = "<group>"; };
@@ -174,6 +177,7 @@
 				5F8ED87B67B36BCEEDCFD0AE /* AgentState.swift */,
 				3319619080CE97739DAE0150 /* AoraAvatar.swift */,
 				0A5DE61D0068078122A26837 /* AoraGeometry.json */,
+				AB12F0E7A5B0C9D4E6A70001 /* FleetPalette.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -303,6 +307,7 @@
 				73CC266328D439FCA6282E58 /* DeviceConversations.swift in Sources */,
 				D21DE65305C64CDA44D522E9 /* DeviceWorkspace.swift in Sources */,
 				FC51AEE53903035D63EA23AB /* FleetChatStore.swift in Sources */,
+				AB12F0E7A5B0C9D4E6A70002 /* FleetPalette.swift in Sources */,
 				33377B962D557534095214E8 /* FleetWorkspace.swift in Sources */,
 				7E521367D89261E3C8DD877D /* KnowledgeView.swift in Sources */,
 				255B7FE57910B1CA600852A3 /* MessageAlerts.swift in Sources */,
@@ -330,6 +335,7 @@
 			files = (
 				D8C1C8C390961A82C8C68149 /* AgentState.swift in Sources */,
 				52409B6591A772F32A25E30E /* AoraAvatar.swift in Sources */,
+				AB12F0E7A5B0C9D4E6A70003 /* FleetPalette.swift in Sources */,
 				E00EA2E12AEFF69E4DF2ECD1 /* MikaWidgets.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
