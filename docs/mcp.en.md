@@ -97,7 +97,7 @@ In your MCP client, add a server of type "HTTP" (also called Streamable HTTP), e
 ```json
 {
   "mcpServers": {
-    "mika": {
+    "fleetpilot": {
       "type": "http",
       "url": "http://192.168.1.23:8765/mcp",
       "headers": { "Authorization": "Bearer <token>" }
@@ -120,25 +120,25 @@ curl -s http://192.168.1.23:8765/mcp \
 
 | Tool | Arguments | What it does |
 | --- | --- | --- |
-| `mika_run_task` | `goal` (required), `conversation` (optional) | Hands Mika a job and returns a `task_id` right away. The task is recorded in a conversation you can see in the app. To follow up on an earlier job, pass the `conversation` that task returned. |
-| `mika_task_status` | `task_id` | The task's state now: status, latest progress, what it is waiting for, and the answer when done. |
-| `mika_wait_task` | `task_id`, `timeout_s` (optional, default 30, at most 50) | Waits until the status changes (for example Mika starts waiting for an answer, or finishes) or time runs out, then returns the state. Progress notes alone don't count, so it doesn't return on every step. |
-| `mika_answer` | `task_id`, `text` | Answers the question Mika asked in this task. |
-| `mika_cancel_task` | `task_id` | Stops the task. |
-| `mika_list_tasks` | `limit` (optional, default 10) | The most recent tasks handed over from computers, newest first. |
+| `fleetpilot_run_task` | `goal` (required), `conversation` (optional) | Hands Mika a job and returns a `task_id` right away. The task is recorded in a conversation you can see in the app. To follow up on an earlier job, pass the `conversation` that task returned. |
+| `fleetpilot_task_status` | `task_id` | The task's state now: status, latest progress, what it is waiting for, and the answer when done. |
+| `fleetpilot_wait_task` | `task_id`, `timeout_s` (optional, default 30, at most 50) | Waits until the status changes (for example Mika starts waiting for an answer, or finishes) or time runs out, then returns the state. Progress notes alone don't count, so it doesn't return on every step. |
+| `fleetpilot_answer` | `task_id`, `text` | Answers the question Mika asked in this task. |
+| `fleetpilot_cancel_task` | `task_id` | Stops the task. |
+| `fleetpilot_list_tasks` | `limit` (optional, default 10) | The most recent tasks handed over from computers, newest first. |
 
 Statuses:
 
 - `starting`: just handed to the phone, not started yet.
 - `running`: in progress, with the latest progress note.
 - `paused`: waiting for a condition, such as the phone being unlocked (it carries on by itself afterwards), or waiting in the queue.
-- `waiting_for_answer`: Mika asked a question; answer with `mika_answer` (answering on the phone works too). If nobody answers for a long time, Mika carries on as if there were no answer.
+- `waiting_for_answer`: Mika asked a question; answer with `fleetpilot_answer` (answering on the phone works too). If nobody answers for a long time, Mika carries on as if there were no answer.
 - `waiting_on_phone`: this step can only be handled by a person on the phone, such as a step handed over for you to do yourself. The computer can't answer it; wait or cancel. The phone shows its usual notification.
 - `done`: finished, with the answer; `verified` says whether the answer was checked.
 - `failed`: not done, with the reason.
 - `cancelled`: stopped.
 
-Suggested flow: `mika_run_task` → `mika_wait_task` repeatedly → on `waiting_for_answer`, reply with `mika_answer` → until `done` / `failed` / `cancelled`.
+Suggested flow: `fleetpilot_run_task` → `fleetpilot_wait_task` repeatedly → on `waiting_for_answer`, reply with `fleetpilot_answer` → until `done` / `failed` / `cancelled`.
 
 ## Security
 
@@ -148,7 +148,7 @@ Suggested flow: `mika_run_task` → `mika_wait_task` repeatedly → on `waiting_
 - **Every request needs the token.** The token is 32 random bytes and is compared in constant time; 5 wrong tries from one address within a minute lock that address out for a minute.
 - **No browser requests**: anything carrying an `Origin` header is refused, so web pages can't reach the port through your browser.
 - **Private networks only**: both ends must be on a LAN, a private VPN network, or the phone itself; connections from public addresses are dropped immediately.
-- **Spending and confirmations stay on the phone**: in tasks handed over from a computer, payments and actions that need your approval are never carried out, whether or not "Autonomous mode" is on; a step handed over for you to do yourself can only be done on the phone. `mika_answer` answers questions only and cannot approve any of these.
+- **Spending and confirmations stay on the phone**: in tasks handed over from a computer, payments and actions that need your approval are never carried out, whether or not "Autonomous mode" is on; a step handed over for you to do yourself can only be done on the phone. `fleetpilot_answer` answers questions only and cannot approve any of these.
 - **Only the computer's own tasks**: a computer can't see or stop tasks you started on the phone, and the conversations it opens use a fixed prefix, so it can't join your conversations on the phone.
 - Every run record notes that the run was started by a computer (MCP).
 - The transport is plain HTTP, so use it only on networks you trust. Don't share the token; if you think it leaked, use "New token".

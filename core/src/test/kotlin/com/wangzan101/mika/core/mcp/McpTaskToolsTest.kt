@@ -53,7 +53,7 @@ class McpTaskToolsTest {
 
     @Test fun toolListHasTheSixHighLevelTools() {
         val names = tools.definitions().map { it.jsonObject.str("name") }
-        assertEquals(listOf("mika_run_task", "mika_task_status", "mika_wait_task", "mika_answer", "mika_cancel_task", "mika_list_tasks"), names)
+        assertEquals(listOf("fleetpilot_run_task", "fleetpilot_task_status", "fleetpilot_wait_task", "fleetpilot_answer", "fleetpilot_cancel_task", "fleetpilot_list_tasks"), names)
         tools.definitions().forEach { t ->
             val schema = t.jsonObject["inputSchema"]!!.jsonObject
             assertEquals("object", schema.str("type"))

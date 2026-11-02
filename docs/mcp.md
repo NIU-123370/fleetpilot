@@ -97,7 +97,7 @@ adb shell am start-foreground-service -n com.wangzan101.mika/.mcp.McpService -a 
 ```json
 {
   "mcpServers": {
-    "mika": {
+    "fleetpilot": {
       "type": "http",
       "url": "http://192.168.1.23:8765/mcp",
       "headers": { "Authorization": "Bearer <令牌>" }
@@ -120,25 +120,25 @@ curl -s http://192.168.1.23:8765/mcp \
 
 | 工具 | 参数 | 做什么 |
 | --- | --- | --- |
-| `mika_run_task` | `goal`（必填）、`conversation`（可选） | 把一件事交给 Mika，马上返回任务编号 `task_id`。任务记在一个对话里，手机上的对话列表看得到。想接着上一件事说，就把上一个任务返回的 `conversation` 带上。 |
-| `mika_task_status` | `task_id` | 任务此刻的状态、最近的进度、在等什么、做完时的回答。 |
-| `mika_wait_task` | `task_id`、`timeout_s`（可选，默认 30，最多 50） | 等到状态变了（比如开始等你回答、做完了）或者到时间，再返回状态。进度说明变了不算，不会一步一返回。 |
-| `mika_answer` | `task_id`、`text` | 回答 Mika 在这个任务里问的问题。 |
-| `mika_cancel_task` | `task_id` | 停下这个任务。 |
-| `mika_list_tasks` | `limit`（可选，默认 10） | 电脑交来的最近几个任务，新的在前。 |
+| `fleetpilot_run_task` | `goal`（必填）、`conversation`（可选） | 把一件事交给 Mika，马上返回任务编号 `task_id`。任务记在一个对话里，手机上的对话列表看得到。想接着上一件事说，就把上一个任务返回的 `conversation` 带上。 |
+| `fleetpilot_task_status` | `task_id` | 任务此刻的状态、最近的进度、在等什么、做完时的回答。 |
+| `fleetpilot_wait_task` | `task_id`、`timeout_s`（可选，默认 30，最多 50） | 等到状态变了（比如开始等你回答、做完了）或者到时间，再返回状态。进度说明变了不算，不会一步一返回。 |
+| `fleetpilot_answer` | `task_id`、`text` | 回答 Mika 在这个任务里问的问题。 |
+| `fleetpilot_cancel_task` | `task_id` | 停下这个任务。 |
+| `fleetpilot_list_tasks` | `limit`（可选，默认 10） | 电脑交来的最近几个任务，新的在前。 |
 
 状态有这几种：
 
 - `starting`：刚交给手机，还没开始。
 - `running`：正在做，带着最近的进度说明。
 - `paused`：在等一个条件，比如手机锁屏了，解锁后自动接着做；或者在排队。
-- `waiting_for_answer`：Mika 问了一个问题，用 `mika_answer` 回答（在手机上回答也行）。等太久没人回答，Mika 会当作没有回答接着做。
+- `waiting_for_answer`：Mika 问了一个问题，用 `fleetpilot_answer` 回答（在手机上回答也行）。等太久没人回答，Mika 会当作没有回答接着做。
 - `waiting_on_phone`：这一步只能由人在手机上处理，比如交给你亲手操作的一步。电脑这边没法代答，只能等或者停掉任务；手机上会照常弹出通知。
 - `done`：做完了，带着回答；`verified` 表示回答核对过。
 - `failed`：没做成，带着原因。
 - `cancelled`：停掉了。
 
-建议的用法：`mika_run_task` → 反复 `mika_wait_task` → 遇到 `waiting_for_answer` 用 `mika_answer` → 直到 `done` / `failed` / `cancelled`。
+建议的用法：`fleetpilot_run_task` → 反复 `fleetpilot_wait_task` → 遇到 `waiting_for_answer` 用 `fleetpilot_answer` → 直到 `done` / `failed` / `cancelled`。
 
 ## 安全
 
@@ -148,7 +148,7 @@ curl -s http://192.168.1.23:8765/mcp \
 - **每个请求都要带令牌**。令牌是 32 字节的随机数，按常量时间比较；同一个地址一分钟内错 5 次，就先封一分钟。
 - **不接受浏览器的请求**：带 `Origin` 请求头的一律拒绝，网页没法借你的浏览器碰到这个端口。
 - **只接受私有网络**：两端都必须是局域网、私有 VPN 网络或本机的地址，公网地址来的连接当场断开。
-- **花钱和确认只能在手机上**：电脑交来的任务里，付款、需要你同意的操作永远不会执行，不管「自主模式」开没开；交给你亲手处理的那一步也只能在手机上处理。`mika_answer` 只能回答问题，回答不了这些。
+- **花钱和确认只能在手机上**：电脑交来的任务里，付款、需要你同意的操作永远不会执行，不管「自主模式」开没开；交给你亲手处理的那一步也只能在手机上处理。`fleetpilot_answer` 只能回答问题，回答不了这些。
 - **只碰电脑自己交来的任务**：电脑看不到、也停不了你在手机上发起的任务；电脑开的对话编号带固定前缀，接不上你手机上的对话。
 - 每次运行的记录里写明是电脑（MCP）发起的。
 - 传输是明文 HTTP，只适合在自己信任的网络里用；令牌别发给别人，怀疑泄露就「换一个」。

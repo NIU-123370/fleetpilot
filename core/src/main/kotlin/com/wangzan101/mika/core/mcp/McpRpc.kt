@@ -152,7 +152,7 @@ class McpRpc(
         } catch (e: McpTaskTools.ToolError) {
             return Call.Done(toolResult(e.message ?: "error", null, isError = true))
         } catch (e: Exception) {
-            return Call.Done(toolResult("Mika could not do that: ${e.message ?: e::class.simpleName}", null, isError = true))
+            return Call.Done(toolResult("FleetPilot could not do that: ${e.message ?: e::class.simpleName}", null, isError = true))
         }
         return Call.Done(toolResult(out.toString(), out, isError = false))
     }
@@ -164,7 +164,7 @@ class McpRpc(
     }
 
     private fun capabilities() = buildJsonObject { putJsonObject("tools") { put("listChanged", false) } }
-    private fun serverInfo() = buildJsonObject { put("name", "mika"); put("title", "Mika"); put("version", serverVersion) }
+    private fun serverInfo() = buildJsonObject { put("name", "fleetpilot"); put("title", "FleetPilot"); put("version", serverVersion) }
 
     private fun clientName(info: JsonElement?): String? =
         ((info as? JsonObject)?.get("name") as? JsonPrimitive)?.contentOrNull?.take(64)
@@ -203,8 +203,8 @@ class McpRpc(
         const val META_CAPABILITIES = "io.modelcontextprotocol/clientCapabilities"
         const val META_SERVER = "io.modelcontextprotocol/serverInfo"
 
-        const val INSTRUCTIONS = "Mika is an AI agent running on the user's Android phone. Hand it whole tasks with mika_run_task " +
-            "(it operates the phone's apps and browser itself), then follow them with mika_wait_task. Answer its questions with mika_answer. " +
+        const val INSTRUCTIONS = "FleetPilot is an AI agent running on the user's Android phone. Hand it whole tasks with fleetpilot_run_task " +
+            "(it operates the phone's apps and browser itself), then follow them with fleetpilot_wait_task. Answer its questions with fleetpilot_answer. " +
             "Payments, confirmations and steps handed to the user can only be done by the user on the phone."
 
         private val json = Json { ignoreUnknownKeys = true }

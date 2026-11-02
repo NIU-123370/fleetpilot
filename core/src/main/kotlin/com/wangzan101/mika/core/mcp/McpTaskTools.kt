@@ -56,7 +56,7 @@ object RemoteStatus {
     const val CANCELLED = "cancelled"
 
     const val ON_PHONE_NOTE = "This step needs the user on the phone and cannot be answered over MCP. " +
-        "Mika has shown its usual notification there; keep waiting with mika_wait_task or cancel the task."
+        "FleetPilot has shown its usual notification there; keep waiting with fleetpilot_wait_task or cancel the task."
 
     fun of(state: TaskState?): String = when (state) {
         null, TaskState.Idle -> STARTING
@@ -93,7 +93,7 @@ object RemoteStatus {
             is TaskState.WaitingInput -> {
                 put("question", s.prompt)
                 s.options?.takeIf { it.isNotEmpty() }?.let { o -> putJsonArray("options") { o.forEach { add(it) } } }
-                put("note", "Mika is asking a question. Reply with mika_answer; the user can also answer on the phone.")
+                put("note", "FleetPilot is asking a question. Reply with fleetpilot_answer; the user can also answer on the phone.")
             }
             is TaskState.WaitingConfirmation -> {
                 put("waiting_for", "confirmation")
@@ -132,14 +132,14 @@ class McpTaskTools(
     data class Tool(val name: String, val description: String, val schema: JsonObject, val readOnly: Boolean)
 
     val tools: List<Tool> = listOf(
-        Tool(RUN, "Hand Mika a task to do on the Android phone. Mika runs its own agent on the phone (apps, web, files) " +
+        Tool(RUN, "Hand FleetPilot a task to do on the Android phone. FleetPilot runs its own agent on the phone (apps, web, files) " +
             "and records the task in a conversation the user can see in the app. Returns a task_id right away; " +
-            "follow it with mika_wait_task. Payments and confirmations are never approved over MCP.",
+            "follow it with fleetpilot_wait_task. Payments and confirmations are never approved over MCP.",
             schema(required = listOf("goal")) {
                 putJsonObject("goal") { put("type", "string"); put("description", "What to get done, in plain words, as you would tell a person.") }
                 putJsonObject("conversation") {
                     put("type", "string")
-                    put("description", "Optional: continue a conversation returned by an earlier task so Mika keeps its context.")
+                    put("description", "Optional: continue a conversation returned by an earlier task so FleetPilot keeps its context.")
                 }
             }, readOnly = false),
         Tool(STATUS, "Current state of a task: status, latest progress note, the question it is waiting on, or the final answer.",
@@ -153,7 +153,7 @@ class McpTaskTools(
                     put("description", "Longest wait in seconds.")
                 }
             }, readOnly = true),
-        Tool(ANSWER, "Answer the question Mika asked in this task (status waiting_for_answer). " +
+        Tool(ANSWER, "Answer the question FleetPilot asked in this task (status waiting_for_answer). " +
             "Cannot approve payments, confirmations or steps handed to the user; those stay on the phone.",
             schema(required = listOf("task_id", "text")) {
                 taskIdProp()
@@ -228,7 +228,7 @@ class McpTaskTools(
                 RemoteStatus.WAITING_ON_PHONE -> throw ToolError(RemoteStatus.ON_PHONE_NOTE)
                 else -> throw ToolError("Task ${t.id} is not waiting for an answer (status ${RemoteStatus.of(t.state)}).")
             }
-            if (!tasks.answer(t.id, text)) throw ToolError("The question is no longer open; check mika_task_status.")
+            if (!tasks.answer(t.id, text)) throw ToolError("The question is no longer open; check fleetpilot_task_status.")
             buildJsonObject { put("task_id", t.id); put("accepted", true) }
         }
         CANCEL -> {
@@ -277,12 +277,12 @@ class McpTaskTools(
     }
 
     companion object {
-        const val RUN = "mika_run_task"
-        const val STATUS = "mika_task_status"
-        const val WAIT = "mika_wait_task"
-        const val ANSWER = "mika_answer"
-        const val CANCEL = "mika_cancel_task"
-        const val LIST = "mika_list_tasks"
+        const val RUN = "fleetpilot_run_task"
+        const val STATUS = "fleetpilot_task_status"
+        const val WAIT = "fleetpilot_wait_task"
+        const val ANSWER = "fleetpilot_answer"
+        const val CANCEL = "fleetpilot_cancel_task"
+        const val LIST = "fleetpilot_list_tasks"
         const val DEFAULT_WAIT_S = 30
         /** 电脑上的客户端一个请求常见的时限是一分钟,等待留出余量。 */
         const val MAX_WAIT_S = 50
@@ -306,6 +306,6 @@ class McpTaskTools(
         }
 
         private fun kotlinx.serialization.json.JsonObjectBuilder.taskIdProp() =
-            putJsonObject("task_id") { put("type", "string"); put("description", "The task_id returned by mika_run_task.") }
+            putJsonObject("task_id") { put("type", "string"); put("description", "The task_id returned by fleetpilot_run_task.") }
     }
 }

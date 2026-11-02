@@ -57,6 +57,7 @@
 | `app/src/main/java/com/wangzan101/mika/ui/AboutCopy.kt`、`AboutScreen.kt` | 「关于」页加一行上游出处，并把"没有 release"单独提示出来 |
 | `app/src/main/res/values*/strings_about.xml`（简中、繁中、英文） | 同上三条文案；"上游作者"这个改法把 wangzan101 的微博/微信标成**上游的个人渠道**，不是本项目的客服入口 |
 | `app/src/test/java/com/wangzan101/mika/about/`（`UpdateCheckerTest.kt`、`MikaLinksTest.kt`、`ApkIntegrityTest.kt`） | 404 与"发布后清标记"两条新用例、上游出处在改名后仍在用例里、`ApkIntegrity` 的可信下载白名单跟着 `RELEASES` 改（**上游的 APK 现在会被拒**，见下节） |
+| `core/.../core/mcp/*.kt`、`docs/mcp.md`、`docs/mcp.en.md`、`docs/architecture.md` 与 MCP 测试 | 电脑连接（MCP）那层的品牌对齐：握手信息 `name`/`title` 改成 fleetpilot/FleetPilot，六个工具名 `mika_*` → `fleetpilot_*`，给模型和用户的英文提示也跟着改（资源名 `mika_launcher_art` 这类没动）。真机实测 `tools/list` 六项全是 `fleetpilot_*` |
 | `tools/provenance_check.py`、`tools/provenance-changed.txt` | 新增：把"diff 出来只有表里那些文件"变成机器判定——逐文件清单 + 双向核对（没申报 / 已陈旧都红） |
 | `.github/workflows/ci.yml` | 新增：安卓全套（测试＋出包＋编译 androidTest）、与上游逐文件比对、iOS 语法解析、iOS 真编译（Xcode 26.3 与 16.4 两支） |
 | `.git` | 未继承上游历史，从零开始提交；出处以本文件与两份 README 顶部标注为准 |
