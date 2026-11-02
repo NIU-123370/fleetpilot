@@ -25,6 +25,8 @@ app/src/main/java/com/wangzan101/mika/about/UpdateChecker.kt
 app/src/main/java/com/wangzan101/mika/capsule/CapsuleCardContent.kt
 app/src/main/java/com/wangzan101/mika/capsule/CapsuleCardModel.kt
 app/src/main/java/com/wangzan101/mika/capsule/CapsuleContent.kt
+app/src/main/java/com/wangzan101/mika/remote/DeviceName.kt
+app/src/main/java/com/wangzan101/mika/remote/FleetController.kt
 app/src/main/java/com/wangzan101/mika/settings/ProviderStore.kt
 app/src/main/java/com/wangzan101/mika/ui/AboutCopy.kt
 app/src/main/java/com/wangzan101/mika/ui/AboutScreen.kt
@@ -106,6 +108,7 @@ app/src/test/java/com/wangzan101/mika/about/ApkIntegrityTest.kt
 app/src/test/java/com/wangzan101/mika/about/MikaLinksTest.kt
 app/src/test/java/com/wangzan101/mika/about/UpdateCheckerTest.kt
 app/src/test/java/com/wangzan101/mika/capsule/CapsuleModelTest.kt
+app/src/test/java/com/wangzan101/mika/remote
 app/src/test/java/com/wangzan101/mika/task/SedimentationWiringTest.kt
 app/src/test/java/com/wangzan101/mika/ui/ChatCopyTest.kt
 app/src/test/java/com/wangzan101/mika/ui/EnglishCopyTest.kt

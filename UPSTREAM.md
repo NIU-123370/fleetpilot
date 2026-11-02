@@ -50,6 +50,7 @@
 | `ui/ChatCopy.kt`、`ui/AboutScreen.kt`、`ui/McpScreen.kt`、`capsule/CapsuleCardModel.kt`、`capsule/CapsuleCardContent.kt`、`about/ApkUpdater.kt`、`about/Diagnostics.kt`、`about/UpdateChecker.kt`、`MikaApp.kt`、`settings/ProviderStore.kt`、`values-zh`/`values-b+zh+Hant/strings_chat.xml` | 界面上还写死自己名字的地方全部接到 `R.string.app_name` 这一个来源：对话页顶栏、关于页图标下面那行、卡片抬头（两处）、复制给剪贴板的标签、下载通知标题、诊断信息表头、发给模型服务与 GitHub 的 User-Agent、示例文案的繁简两版 |
 | `ui/LicensesScreen.kt` | 许可页的源码说明改成指本仓库真的有的文件（`tools/sandbox/sources.lock`、`patches/`、`build-native.sh`、`runtime-sources.py`），并写明这个仓库还没有发布页；顺手删掉那条列出来只为按名字滤掉的"App 自己" |
 | `LicensesTest.kt`、`ChatCopyTest.kt`、`UpdateCheckerTest.kt`、`androidTest/AboutScreenTest.kt` | 钉死旧名字的三条期望改成跟同一个来源；新增"许可页指的脚本必须真存在"和"许可页与声明文件双向一一对应"两条用例 |
+| `app/src/main/java/com/wangzan101/mika/remote/DeviceName.kt` 与 `remote/FleetController.kt` | 修中文设备名乱码：安卓 `NsdManager` 把 DNS 实例名按单字节解，对端用中文设备名做实例名时就成 `äº‘å®`（模拟器上真截到过）。只在取不到 TXT 的 name、退回 serviceName 时用它还原；windows-1252 里未定义的那几个字节被 Java 解成 U+FFFD，按位置当未知量反解。5 条单测 + 投毒验过（投毒后 4 条红） |
 | `app/src/main/java/com/wangzan101/mika/about/MikaLinks.kt` | 对外地址分成两组：反馈/发布页/检查更新指向本仓库，上游两级（phongent、mika）作为 `UPSTREAM_*` 保留并显示在「关于」页 |
 | `app/src/main/java/com/wangzan101/mika/about/UpdateChecker.kt` | 新增 `CheckStatus.NoReleases`：查发布吃 404 是"这个仓库还没发布过"，不是"连不上"（本 fork 现在正是前者） |
 | `app/src/main/java/com/wangzan101/mika/ui/AboutCopy.kt`、`AboutScreen.kt` | 「关于」页加一行上游出处，并把"没有 release"单独提示出来 |

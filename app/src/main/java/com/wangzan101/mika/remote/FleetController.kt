@@ -86,7 +86,9 @@ class FleetController(context:Context) {
                         serviceIds[service.serviceName]=id;resolveFailures.remove(service.serviceName)
                         val host=info.host?.hostAddress ?: return
                         val address=if(host.contains(':'))"[$host]" else host
-                        val name=prefs.getString("name:$id",null) ?: info.attributes["name"]?.toString(Charsets.UTF_8) ?: info.serviceName
+                        // 最后那条是框架按单字节字符集解的实例名，中文会烂成 "äº‘å®"（见 DeviceName 的注释）。
+                        val name=prefs.getString("name:$id",null) ?: info.attributes["name"]?.toString(Charsets.UTF_8)
+                            ?: DeviceName.repair(info.serviceName)
                         val device=Device(id,name,"http://$address:${info.port}")
                         val prior=mutable.value.firstOrNull{it.id==id}
                         if(prior!=null && prior.url!=device.url){
