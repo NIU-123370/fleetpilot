@@ -10,7 +10,8 @@ import java.io.File
  * 这条测试存在的原因是:这个仓库在普通开发机和 CI 上都编译不了 iOS(要 Xcode 与签名),
  * 而语法级检查(`swiftc -parse`)只看单个文件的语法,看不见"这个文件根本没参与编译"。
  * 真出事过两次,都是这一条能测而上面那条测不出来的:配色改动新加的 `Shared/FleetPalette.swift`
- * 被七十多个文件引用,却一处都没写进工程;补上主 App 之后又漏了 Widget 扩展——
+ * 被 iOS 那边一大片文件引用(现算:grep -rn "FleetPalette|fleetPanel|fleetGlass|FleetWallpaper" ios --include=*.swift),
+ * 却一处都没写进工程;补上主 App 之后又漏了 Widget 扩展——
  * `Widgets/MikaWidgets.swift` 也在用同一批颜色 token。
  *
  * 范围与 `ios/project.yml` 一致:`App`、`Shared`、`Widgets` 三处的源码,`Resources` 除外。

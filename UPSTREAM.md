@@ -46,7 +46,7 @@
 | `app/src/main/java/com/wangzan101/mika/ui/AboutCopy.kt`、`AboutScreen.kt` | 「关于」页加一行上游出处，并把"没有 release"单独提示出来 |
 | `app/src/main/res/values*/strings_about.xml`（简中、繁中、英文） | 同上三条文案；"上游作者"这个改法把 wangzan101 的微博/微信标成**上游的个人渠道**，不是本项目的客服入口 |
 | `app/src/test/java/com/wangzan101/mika/about/`（`UpdateCheckerTest.kt`、`MikaLinksTest.kt`、`ApkIntegrityTest.kt`） | 404 与"发布后清标记"两条新用例、上游出处在改名后仍在用例里、`ApkIntegrity` 的可信下载白名单跟着 `RELEASES` 改（**上游的 APK 现在会被拒**，见下节） |
-| `.github/workflows/ci.yml` | 新增：安卓全套（测试＋出包）、与上游逐文件比对、iOS 语法解析 |
+| `.github/workflows/ci.yml` | 新增：安卓全套（测试＋出包＋编译 androidTest）、与上游逐文件比对、iOS 语法解析、iOS 真编译（Xcode 26.3 与 16.4 两支） |
 | `.git` | 未继承上游历史，从零开始提交；出处以本文件与两份 README 顶部标注为准 |
 
 上游的 `docs/media/brand/phongent-logo.png`、`phongent-icon.png` 以及 `ios/App/Assets.xcassets/AppIcon.appiconset/phongent.png`
@@ -94,7 +94,7 @@ diff -rq -x .git /tmp/upstream /tmp/fleetpilot
 | GitHub Actions（`.github/workflows/ci.yml`） | ✅ `4f0a81f` 起三条 job 全绿（2026-11-02 06:0x 那一次）：`android` 的"跑测试并出包"跑了 442 秒并附上两个 APK，`provenance`、`ios-syntax` 绿。此前 `android` 连红四次，原因见下面那节 |
 | Swift 语法解析（`swiftc -parse`，30 个文件） | ✅ 全过；正对照：故意截断一个文件能报 4 个 error。**这条只到语法**——看不见"某文件没参与编译"和类型错误，上面那节讲的就是它漏掉的东西 |
 | Swift 类型检查与链接、iOS 构建（本机） | ❌ 没做——本机只有 Command Line Tools，没有 Xcode（装它要 Apple ID 且 12 GB 起） |
-| iOS 真编译（CI 的 `ios-build` job） | ⚠️ 刚加的一步：macos-15 + Xcode 26.3，模拟器、不签名，编 `MikaRemote`（连带 Widget 扩展）。**绿没绿以下一次 run 的读数为准**，别按这行推断 |
+| iOS 真编译（CI 的 `ios-build`） | ✅ Xcode 26.3 那支在 `2b4a348` 绿：编 App 与 Widget 扩展用了 101 秒（模拟器、不签名、`DEVELOPMENT_TEAM` 清空）。这是这仓库第一次真的把 Swift 类型检查跑起来。**Xcode 16.4 那支（走 `.ultraThinMaterial` 回退）是这次新加的矩阵项，绿没绿看下一次 run 的读数** |
 | 跑起来好不好看、滚起来掉不掉帧 | ❌ 没跑过任何一台真机或模拟器 |
 
 **Why：** 这个仓库的立身之处是"没验证的话不写成已验证"。上面这些格子空着，比补一个好看的结论有用。
@@ -134,9 +134,11 @@ cd /tmp/fp-baseline && JAVA_HOME=/opt/homebrew/opt/openjdk@17 ANDROID_HOME=~/Lib
 `swiftc -parse` 是**逐文件、只到语法**的检查。它看不见两类问题：某个符号根本没参与编译，以及类型不对。
 配色那批改动就撞上第一类，而且是两层：
 
-1. 新加的 `ios/Shared/FleetPalette.swift` 写进了磁盘，七十多个文件引用它的 token，
+1. 新加的 `ios/Shared/FleetPalette.swift` 写进了磁盘，**15 个文件、66 处**引用它的 token
+   （现算：`grep -rn "FleetPalette\|fleetPanel\|fleetGlass\|FleetWallpaper" ios --include=*.swift` 去掉它自己那 9 处），
    而 `ios/MikaRemote.xcodeproj/project.pbxproj` 里**一处都没有**——Xcode 工程按名字逐个列源码，
    新增文件不会自己进去。这条 parse 检查全绿也照样发现不了。
+   （更正一下：这一节最早写的是"七十多个文件"，那是**引用行数**，不是文件数。）
    （上游用 `ios/project.yml` + XcodeGen 生成工程，按目录收源码；提交进仓库的那份 `.xcodeproj` 是生成结果，
    只有重新生成才带上新文件。）
 2. 补上主 App 之后才发现还有第二边：`Widgets/MikaWidgets.swift` 也在用同一批 token，

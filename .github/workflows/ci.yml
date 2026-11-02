@@ -143,19 +143,25 @@ jobs:
   # iOS：真编译。语法级检查在下面那条里，那条看不见"符号根本没参与编译"和类型错误——
   # FleetPalette.swift 漏挂进工程那两次就都是 parse 全绿、真编译必红的。
   #
-  # macos-15 镜像上默认是 Xcode 16.4，这里显式切到 26.3：Liquid Glass 的 API 只随 Xcode 26 的 SDK 提供，
-  # 而 FleetPalette.swift 里那段是 #if compiler(>=6.2) 圈住的——不切过去就只会编到回退分支，
-  # 我新写的那一半等于没编译过。
+  # 两个 Xcode 都要编，因为 FleetPalette.swift 里那段是 #if compiler(>=6.2) 圈住的：
+  #   26.3 → Swift 6.2，编的是 Liquid Glass 那一支（这仓库新写的东西）
+  #   16.4 → 镜像默认版本，编的是 .ultraThinMaterial 回退支（大多数人手上的 Xcode）
+  # 只跑一边，另一边的代码就从来没编译过。
   ios-build:
     runs-on: macos-15
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        xcode: ["26.3", "16.4"]
+    name: iOS 编译（Xcode ${{ matrix.xcode }}）
     steps:
       - uses: actions/checkout@v7
 
-      - name: 选 Xcode 26.3
+      - name: 选 Xcode ${{ matrix.xcode }}
         run: |
           set -euo pipefail
-          sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+          sudo xcode-select -s "/Applications/Xcode_${{ matrix.xcode }}.app/Contents/Developer"
           xcodebuild -version
 
       - name: 工程里有哪几个 scheme
@@ -174,7 +180,7 @@ jobs:
             grep -E "error:|fatal error" /tmp/xcodebuild.log | head -12
             reason=$(grep -m1 -E "error:|fatal error" /tmp/xcodebuild.log | cut -c1-360 | sed 's/%/%25/g')
             [ -n "$reason" ] || reason=$(tail -2 /tmp/xcodebuild.log | tr '\n' ' ' | cut -c1-360 | sed 's/%/%25/g')
-            echo "::error::iOS 编译失败：${reason}"
+            echo "::error::iOS 在 Xcode ${{ matrix.xcode }} 上编译失败：${reason}"
             exit 1
           fi
 
@@ -182,7 +188,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: xcodebuild-log
+          name: xcodebuild-${{ matrix.xcode }}
           path: /tmp/xcodebuild.log
           if-no-files-found: ignore
 
