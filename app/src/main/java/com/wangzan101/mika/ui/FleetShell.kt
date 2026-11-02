@@ -67,6 +67,8 @@ fun FleetShell(systemStatus:com.wangzan101.mika.settings.SystemStatus,onFix:(Fix
     var target by remember{mutableStateOf<String?>("all")}
     var activeGroup by remember{mutableStateOf<String?>(null)}
     var input by remember{mutableStateOf("")}
+    /** 左侧栏的「电脑」那一项:电脑经 MCP 派下来的任务(会话 id 带 mcp- 前缀)。 */
+    var showComputer by remember{mutableStateOf(false)}
     var status by remember{mutableStateOf("")}
     val historyPrefs=remember{context.getSharedPreferences("fleet-history",0)}
     var log by remember{mutableStateOf(runCatching{val saved=org.json.JSONArray(historyPrefs.getString("messages","[]"));List(saved.length()){saved.getString(it)}}.getOrDefault(emptyList<String>()))}
@@ -121,13 +123,15 @@ fun FleetShell(systemStatus:com.wangzan101.mika.settings.SystemStatus,onFix:(Fix
                 1->Column(Modifier.fillMaxSize()){
                 Row(Modifier.weight(1f)){
                     LazyColumn(Modifier.width(76.dp).background(MikaTheme.colors.glassFill)){
-                        item{TextButton(onClick={target="all";activeGroup=null}){Text("全部")}}
+                        item{TextButton(onClick={showComputer=false;target="all";activeGroup=null}){Text("全部")}}
                         devices.filter{it.connected}.groupBy{groups[it.id] ?: "默认组"}.toSortedMap().forEach{(group,members)->
                             item(key="group:$group"){Row{TextButton(onClick={target="all";activeGroup=group},modifier=Modifier.weight(1f),contentPadding=PaddingValues(0.dp)){Text(group,style=MaterialTheme.typography.labelSmall)};TextButton(onClick={collapsedGroups=if(group in collapsedGroups)collapsedGroups-group else collapsedGroups+group},modifier=Modifier.width(24.dp),contentPadding=PaddingValues(0.dp)){Text(if(group in collapsedGroups)"›" else "⌄")}}}
-                            if(group !in collapsedGroups)items(members,key={it.id}){device->FleetAvatarButton(device.id,device.name,target==device.id,onClick={target=device.id},onMention={target="all";activeGroup=null;input+=" @${device.name} "})}
+                            if(group !in collapsedGroups)items(members,key={it.id}){device->FleetAvatarButton(device.id,device.name,target==device.id,onClick={showComputer=false;target=device.id},onMention={target="all";activeGroup=null;input+=" @${device.name} "})}
                         }
+                        // 电脑端和本机/其它手机并排:同样一颗小球,选中时打开"电脑派来的任务"。
+                        item(key="computer"){FleetAvatarButton("computer","电脑端",showComputer,onClick={showComputer=true;target=null;activeGroup=null},onMention={})}
                     }
-                    if(target==null)Box(Modifier.weight(1f)){localChat()} else Column(Modifier.fillMaxSize().padding(16.dp)){
+                    if(showComputer)Box(Modifier.weight(1f)){ComputerTasks()} else if(target==null)Box(Modifier.weight(1f)){localChat()} else Column(Modifier.fillMaxSize().padding(16.dp)){
 
                     Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){Text(devices.firstOrNull{it.id==target}?.name ?: activeGroup ?: "全部设备",style=MaterialTheme.typography.titleLarge);var menu by remember{mutableStateOf(false)};Box{TextButton(onClick={menu=true}){Text("•••")};DropdownMenu(expanded=menu,onDismissRequest={menu=false}){DropdownMenuItem(text={Text("保存输入为模板")},enabled=input.isNotBlank(),onClick={templateName=input.take(24);savingTemplate=true;menu=false});templates.keys.sorted().forEach{title->DropdownMenuItem(text={Text("模板 · $title")},onClick={input=templates[title] ?: "";target="all";menu=false},trailingIcon={TextButton(onClick={templates=templates-title}){Text("删除")}})};groups.values.distinct().sorted().forEach{group->DropdownMenuItem(text={Text("分组 · $group")},onClick={activeGroup=group;target="all";menu=false})};DropdownMenuItem(text={Text("删除记录")},onClick={menu=false;clearHistory=true})}}}
                     val visibleHistory=history.filter{row->val id=row.getString("deviceId");(target=="all" && (activeGroup==null || groups[id]==activeGroup)) || target==id}
@@ -192,4 +196,39 @@ fun FleetShell(systemStatus:com.wangzan101.mika.settings.SystemStatus,onFix:(Fix
             }
         }
     }}
+}
+
+/** 左侧栏「电脑」:电脑经 MCP 派下来的任务。会话 id 都带 [McpTaskTools] 的 mcp- 前缀,所以能认出来;
+ *  点一行走和通知一样的深链,直接打开那次对话看完整过程。 */
+@androidx.compose.runtime.Composable
+private fun ComputerTasks(){
+    val context=androidx.compose.ui.platform.LocalContext.current
+    var reload by androidx.compose.runtime.remember{mutableStateOf(0)}
+    val items=androidx.compose.runtime.remember(reload){
+        runCatching{
+            com.wangzan101.mika.chat.ConversationStore.shared(context).list()
+                .filter{it.id.startsWith("mcp-")}
+        }.getOrDefault(emptyList())
+    }
+    Column(Modifier.fillMaxSize().padding(16.dp)){
+        Row(Modifier.fillMaxWidth(),verticalAlignment=androidx.compose.ui.Alignment.CenterVertically){
+            Text("电脑派来的任务",Modifier.weight(1f),style=MaterialTheme.typography.titleLarge)
+            androidx.compose.material3.TextButton(onClick={reload++}){Text("刷新")}
+        }
+        if(items.isEmpty()) Text("电脑还没派过任务。在电脑上连上 MCP 后让它做事，这里会出现记录。",style=MaterialTheme.typography.bodySmall,color=MikaTheme.colors.ink2)
+        androidx.compose.foundation.lazy.LazyColumn(verticalArrangement=Arrangement.spacedBy(10.dp)){
+            items(items,key={it.id}){s->
+                Card(onClick={context.startActivity(com.wangzan101.mika.task.TaskService.openAppIntent(context,s.id))},
+                    modifier=Modifier.fillMaxWidth(),
+                    shape=androidx.compose.foundation.shape.RoundedCornerShape(18.dp),
+                    colors=androidx.compose.material3.CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surfaceContainerLow)){
+                    Column(Modifier.fillMaxWidth().padding(horizontal=16.dp,vertical=14.dp)){
+                        Text(s.title.ifBlank{"(没有标题)"},maxLines=2,style=MaterialTheme.typography.bodyMedium)
+                        Text(java.text.SimpleDateFormat("MM-dd HH:mm",java.util.Locale.getDefault()).format(java.util.Date(s.updatedAt)),
+                            style=MaterialTheme.typography.labelSmall,color=MikaTheme.colors.ink3)
+                    }
+                }
+            }
+        }
+    }
 }

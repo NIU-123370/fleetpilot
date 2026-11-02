@@ -114,6 +114,7 @@ app/src/test/java/com/wangzan101/mika/about/UpdateCheckerTest.kt
 app/src/test/java/com/wangzan101/mika/capsule/CapsuleModelTest.kt
 app/src/test/java/com/wangzan101/mika/remote
 app/src/test/java/com/wangzan101/mika/task/SedimentationWiringTest.kt
+app/src/test/java/com/wangzan101/mika/ui/AvatarColorTest.kt
 app/src/test/java/com/wangzan101/mika/ui/ChatCopyTest.kt
 app/src/test/java/com/wangzan101/mika/ui/EnglishCopyTest.kt
 app/src/test/java/com/wangzan101/mika/ui/LicensesTest.kt

@@ -1,42 +1,80 @@
 package com.wangzan101.mika.ui
 
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.background
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.viewinterop.AndroidView
-import com.wangzan101.mika.ui.theme.MikaTheme
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.dp
 
+/**
+ * 设备/对话的小图标:圆角方块 + 两只眼睛,一个 id 一个固定颜色。
+ *
+ * 以前这里是每台设备起一个 WebView 画会动的卡通形象,颜色又被"界面只有一个色相"统一成了紫,
+ * 结果所有设备长得一模一样,只能靠形状区分。现在改成画出来的小图标 —— 颜色是"头像"级的区分,
+ * 界面本身(底、卡片、按钮)仍然只有一套紫色。
+ *
+ * 用固定调色板而不是按色相随机:随机会让相邻两台撞成近似色,也给不出黑、青这类有辨识度的颜色。
+ */
+private val AvatarPalette = listOf(
+    Color(0xFFF2761F), // 橙
+    Color(0xFF14A79B), // 青
+    Color(0xFF2F6FDE), // 蓝
+    Color(0xFF15794B), // 绿
+    Color(0xFF12151A), // 近黑
+    Color(0xFFE0A31F), // 琥珀
+    Color(0xFFD8443C), // 红
+    Color(0xFF7A5AE0), // 紫
+)
+
+/** 同一个 id 永远是同一个颜色:FNV-1a 取模,只跟 id 有关,改名字不影响。 */
+internal fun avatarColorIndex(id: String): Int {
+    var hash = 2166136261L
+    for (b in id.lowercase(java.util.Locale.ROOT).toByteArray(Charsets.UTF_8)) {
+        hash = ((hash xor (b.toInt() and 255).toLong()) * 16777619L) and 0xffffffffL
+    }
+    return (hash % AvatarPalette.size).toInt()
+}
+
+internal fun avatarColor(id: String): Color = AvatarPalette[avatarColorIndex(id)]
+
+/** 设备头像;[active] 为 false 时压暗(还没连上/不在干活),颜色和形状不变。 */
 @Composable
 fun FleetAvatar(id:String,modifier:Modifier=Modifier,active:Boolean=true) {
     val context=androidx.compose.ui.platform.LocalContext.current
+    // 本机用设备自己的稳定 id:改设备名不该换颜色(和以前一样)。
     val stableId=if(id=="local")context.getSharedPreferences("lan-identity",0).getString("id",id) ?: id else id
-    val index=stableId.lowercase(java.util.Locale.ROOT).toByteArray(Charsets.UTF_8).fold(2166136261L){hash,byte->((hash xor (byte.toInt() and 255).toLong())*16777619L) and 0xffffffffL}
-    val shape=listOf("blob","wedge","gem")[(index%3).toInt()]
-    // 色相以前是 (index%360000)/1000 —— 整个色环随便转，同一屏里青绿、黄绿都有，
-    // 破的是 HUD-1「整体只有一个色相」。
-    //
-    // 试过三层做法，最后才定：CSS 的 hue-rotate 是矩阵近似，同一块头像会按亮度被拉成不同色相
-    // （截图实测浅色下 208°~300° 都出现过，还发过品红），调基准只是换个错法。
-    // 真正的修法是把「颜色」放回它的源头：assets/agent 里那 64 个情绪色值已经统一映射到 258° 紫
-    // （保留各自明暗，表情仍分得清），所以这里不再需要任何滤镜，只按设备微调亮度。
-    val dark=MikaTheme.colors.isDark
-    val brightness=(if(dark)1.15 else 1.0)*(0.95+(index%5)*0.025)
-    fun script()="var element=document.getElementById('bot');element.style.width=(innerWidth*0.8)+'px';element.style.height=(innerHeight*0.8)+'px';element.style.top=(innerHeight*0.1)+'px';window.setMikaShape('$shape');document.getElementById('bot').style.filter='brightness($brightness)';window.setMikaState('02',false);window.setMikaState('02',$active)"
-    AndroidView(modifier=modifier,factory={context->WebView(context).apply{
-        setBackgroundColor(android.graphics.Color.TRANSPARENT);settings.javaScriptEnabled=true;settings.allowFileAccess=true;webChromeClient=android.webkit.WebChromeClient()
-        settings.allowContentAccess=false;isClickable=false;isFocusable=false;setOnTouchListener{_,_->true}
-        webViewClient=object:WebViewClient(){override fun onPageFinished(view:WebView,url:String){view.tag=script();view.evaluateJavascript(script(),null)}}
-        loadUrl("file:///android_asset/agent/index.html")
-    }},update={if(it.tag!=null && it.tag!=script()){it.tag=script();it.evaluateJavascript(script(),null)}},onRelease={it.evaluateJavascript("window.destroyMika()",null);it.destroy()})
+    val base=avatarColor(stableId)
+    val top=if(active)base else base.copy(alpha=0.45f)
+    val bottom=if(active)base.copy(alpha=0.86f) else base.copy(alpha=0.32f)
+    Canvas(modifier){
+        val side=size.minDimension
+        drawRoundRect(
+            brush=Brush.verticalGradient(listOf(top,bottom)),
+            size=Size(side,side),
+            cornerRadius=CornerRadius(side*0.28f,side*0.28f),
+        )
+        val eyeW=side*0.13f; val eyeH=side*0.20f; val eyeY=side*0.42f
+        val ink=if(active)Color(0xFF16181D) else Color(0xFF3A3D45)
+        for(cx in listOf(side*0.34f,side*0.66f)){
+            drawRoundRect(
+                color=ink,
+                topLeft=Offset(cx-eyeW/2f,eyeY),
+                size=Size(eyeW,eyeH),
+                cornerRadius=CornerRadius(eyeW/2f,eyeW/2f),
+            )
+        }
+    }
 }
 
 
