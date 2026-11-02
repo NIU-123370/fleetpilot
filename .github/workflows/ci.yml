@@ -32,12 +32,18 @@ jobs:
       - name: 装 Android SDK（cmdline-tools + platform 36 + build-tools 36）
         run: |
           set -euo pipefail
-          mkdir -p "$ANDROID_HOME/cmdline-tools"
+          mkdir -p "$ANDROID_HOME/cmdline-tools" "$ANDROID_HOME/licenses"
           curl -fsSL -o /tmp/clt.zip \
             https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
           unzip -q /tmp/clt.zip -d /tmp/clt
           mv /tmp/clt/cmdline-tools "$ANDROID_HOME/cmdline-tools/latest"
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
+          # 许可用本机实际接受过的那两个摘要预置，不用 `yes | sdkmanager --licenses`：
+          # 上一版那么写，`yes` 会在 sdkmanager 结束后被 SIGPIPE 打断，
+          # 而 set -o pipefail 把它的 141 当成整条流水线的失败——CI 就是这么红的。
+          printf '\n24333f8a63b6825ea9c5514f83c2829b004d1fee\n8933bad161af4178b1185d1a37fbf41ea5279c55\n' \
+            > "$ANDROID_HOME/licenses/android-sdk-license"
+          printf '\n84831b9409646a918e30573bab4c9c91346d8abd\n' \
+            > "$ANDROID_HOME/licenses/android-sdk-preview-license"
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
             "platform-tools" "platforms;android-36" "build-tools;36.0.0" > /dev/null
           echo "已装：$(ls "$ANDROID_HOME/platforms") / $(ls "$ANDROID_HOME/build-tools")"
