@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@android:color/white" />
-    <foreground android:drawable="@drawable/mika_launcher_art" />
+    <!-- 前景已经按 108dp 画布、画面占 74% 居中做好（drawable-nodpi/ic_launcher_foreground.png），
+         这样安卓 12+ 的圆形/方形遮罩只裁到留白，不会切掉素材自己的画框。 -->
+    <background android:drawable="@color/ic_launcher_background" />
+    <foreground android:drawable="@drawable/ic_launcher_foreground" />
 </adaptive-icon>

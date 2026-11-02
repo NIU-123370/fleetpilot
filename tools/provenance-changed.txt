@@ -8,6 +8,15 @@ UPSTREAM.md
 app/build.gradle.kts
 app/src/androidTest/java/com/wangzan101/mika/capsule/CapsuleContentTest.kt
 app/src/androidTest/java/com/wangzan101/mika/ui/AboutScreenTest.kt
+app/src/main/assets/agent/ball.js
+app/src/main/assets/agent/emotions.js
+app/src/main/assets/agent/engine.js
+app/src/main/assets/agent/mood-mates/characters/nimbo.js
+app/src/main/assets/agent/mood-mates/characters/twinkle.js
+app/src/main/assets/agent/mood-mates/core/engine.js
+app/src/main/assets/agent/mood-mates/core/features.js
+app/src/main/assets/agent/mood-mates/core/fx.js
+app/src/main/assets/agent/rings.js
 app/src/main/java/com/wangzan101/mika/MikaApp.kt
 app/src/main/java/com/wangzan101/mika/about/ApkUpdater.kt
 app/src/main/java/com/wangzan101/mika/about/Diagnostics.kt
@@ -20,11 +29,15 @@ app/src/main/java/com/wangzan101/mika/settings/ProviderStore.kt
 app/src/main/java/com/wangzan101/mika/ui/AboutCopy.kt
 app/src/main/java/com/wangzan101/mika/ui/AboutScreen.kt
 app/src/main/java/com/wangzan101/mika/ui/ChatCopy.kt
+app/src/main/java/com/wangzan101/mika/ui/FleetAvatar.kt
 app/src/main/java/com/wangzan101/mika/ui/FleetShell.kt
 app/src/main/java/com/wangzan101/mika/ui/LicensesScreen.kt
 app/src/main/java/com/wangzan101/mika/ui/McpScreen.kt
 app/src/main/java/com/wangzan101/mika/ui/theme/Colors.kt
 app/src/main/java/com/wangzan101/mika/ui/theme/Glass.kt
+app/src/main/res/drawable-nodpi/ic_launcher_foreground.png
+app/src/main/res/drawable-nodpi/mika_launcher_art.png
+app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
 app/src/main/res/values-b+zh+Hant/strings.xml
 app/src/main/res/values-b+zh+Hant/strings_about.xml
 app/src/main/res/values-b+zh+Hant/strings_browser.xml
@@ -67,6 +80,7 @@ app/src/main/res/values-zh/strings_task.xml
 app/src/main/res/values-zh/strings_usage.xml
 app/src/main/res/values-zh/strings_viewer.xml
 app/src/main/res/values-zh/strings_web.xml
+app/src/main/res/values/colors.xml
 app/src/main/res/values/strings.xml
 app/src/main/res/values/strings_about.xml
 app/src/main/res/values/strings_browser.xml
@@ -113,6 +127,7 @@ docs/setup-guide.en.md
 docs/setup-guide.md
 docs/ui-redesign.md
 ios/App/AoraAnimatedAvatar.swift
+ios/App/Assets.xcassets/AppIcon.appiconset/phongent.png
 ios/App/DeviceChat.swift
 ios/App/DeviceWorkspace.swift
 ios/App/FleetWorkspace.swift

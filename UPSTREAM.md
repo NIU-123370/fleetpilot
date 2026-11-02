@@ -23,6 +23,8 @@
 | `README.md` | 重写（新名字、新首屏、徽标、章节结构、二次开发计划）；Android 最低版本随 minSdk 抬到 12；补了 CI 跑哪四件事、以及 iOS 为什么要编两路 |
 | `README.en.md` | 同上，英文版 |
 | `docs/media/brand/fleetpilot-logo.png` | 新增，本仓库自己的标识 |
+| `app/src/main/res/drawable-nodpi/mika_launcher_art.png`、`ic_launcher_foreground.png`、`mipmap-anydpi-v26/ic_launcher.xml`、`values/colors.xml` | 桌面图标换成浅紫那版（手机 + 播放 + 对勾 + 星芒 + 环绕）。前景按 108dp 画布、画面占 74% 居中预排，安卓 12+ 的圆形遮罩只裁留白、不切画框；底色取素材四角的 #FBF8FD。文件名沿用上游的，因为工程文件和关于页都按名字引用它 |
+| `ios/App/Assets.xcassets/AppIcon.appiconset/phongent.png` | 同一张图缩到 1024×1024 顶掉上游图标；文件名没改，`Contents.json` 不用动 |
 | `UPSTREAM.md` | 本文件 |
 | `docs/ui-redesign.md` | 新增，界面重设计的决策记录（配色口径、材质矩阵、逐屏清单） |
 | `docs/roadmap.md` | 顶上补一句：这份是**上游**的路线图，本衍生项目自己的计划在 `README.md` 的「二次开发计划」 |
