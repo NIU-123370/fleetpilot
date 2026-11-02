@@ -103,8 +103,10 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
     /** 本机的 token 用量账本:经模型配置建出的每个模型的每次调用都记在这里。 */
     val usage: UsageLedger by lazy { UsageLedger(java.io.File(filesDir, "usage-v1.json")) }
 
-    /** 模型配置与 Key;建出的模型都套上计量,记到 [usage]。 */
-    override val providers: ProviderStore by lazy { ProviderStore.create(this, usage, "Mika/${BuildConfig.VERSION_NAME}") }
+    /** 模型配置与 Key;建出的模型都套上计量,记到 [usage]。发给模型服务的 User-Agent 用应用自己的名字(改名时跟着走)。 */
+    override val providers: ProviderStore by lazy {
+        ProviderStore.create(this, usage, "${getString(R.string.app_name)}/${BuildConfig.VERSION_NAME}")
+    }
 
     /** 用 ChatGPT 登录:跑在 App 的作用域里,期间开前台服务撑住进程(见 [com.wangzan101.mika.settings.ChatGptSignIns])。 */
     val chatGptSignIn by lazy {
@@ -182,9 +184,11 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
     /** Mika 自己的界面此刻看不看得见。 */
     val foreground = AppForeground()
 
-    /** 检查更新:查到的新版本跟进程走,侧栏、设置首页、关于页的红点看同一份。 */
+    /** 检查更新:查到的新版本跟进程走,侧栏、设置首页、关于页的红点看同一份。客户端名同样来自 R.string.app_name。 */
     val updates: com.wangzan101.mika.about.UpdateChecker by lazy {
-        com.wangzan101.mika.about.UpdateChecker(java.io.File(filesDir, "update-v1.json"), BuildConfig.VERSION_NAME)
+        com.wangzan101.mika.about.UpdateChecker(
+            java.io.File(filesDir, "update-v1.json"), BuildConfig.VERSION_NAME, getString(R.string.app_name)
+        )
     }
 
     /** 浮在别的 App 上的悬浮胶囊。 */

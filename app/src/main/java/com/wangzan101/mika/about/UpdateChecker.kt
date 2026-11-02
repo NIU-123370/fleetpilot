@@ -57,6 +57,8 @@ object UpdateSchedule {
 class UpdateChecker(
     private val file: File,
     private val currentVersion: String,
+    /** 报给 GitHub 的客户端名，由调用方给（App 用 R.string.app_name）：这个类不碰资源，单测里也没有资源。 */
+    private val clientName: String,
     private val client: OkHttpClient = defaultClient(),
     private val releaseApi: String = MikaLinks.LATEST_RELEASE_API,
     private val now: () -> Long = System::currentTimeMillis,
@@ -131,7 +133,7 @@ class UpdateChecker(
 
     private fun get(url: String): String {
         val req = Request.Builder().url(url)
-            .header("User-Agent", "Mika/$currentVersion")
+            .header("User-Agent", "$clientName/$currentVersion")
             .header("Accept", "application/vnd.github+json")
             .header("X-GitHub-Api-Version", "2022-11-28")
             .build()

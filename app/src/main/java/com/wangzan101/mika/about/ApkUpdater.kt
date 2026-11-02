@@ -6,6 +6,8 @@ import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.net.Uri
+import com.wangzan101.mika.R
+import com.wangzan101.mika.i18n.tr
 import android.os.Environment
 import java.io.File
 import java.util.UUID
@@ -65,7 +67,7 @@ class ApkUpdater(private val context: Context) {
         // remove 的后台清理可能晚于下一次下载,不能复用旧任务的文件名。
         val target = File(folder, "update-${UUID.randomUUID()}.apk")
         val request = DownloadManager.Request(Uri.parse(url))
-            .setTitle("Mika ${release.version}")
+            .setTitle("${tr(R.string.app_name)} ${release.version}")
             .setMimeType("application/vnd.android.package-archive")
             // 只在下载中显示通知:完成后的通知一点就会绕过下面的校验直接打开安装包,所以不留。
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)

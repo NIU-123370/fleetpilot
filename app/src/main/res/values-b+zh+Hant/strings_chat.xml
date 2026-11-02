@@ -6,8 +6,8 @@
     <string name="chat_greeting_evening">晚上好</string>
     <string name="chat_greeting_night">夜深了</string>
     <string name="chat_empty_prompt">想讓 phongent 做什麼？</string>
-    <string name="chat_example_message">開啟微信，給王贊發訊息，讓他拉我進Mika內測體驗群</string>
-    <string name="chat_example_group_summary">幫我總結微信群聊，Mika內測體驗群今天都聊了些啥</string>
+    <string name="chat_example_message">開啟微信，給王贊發訊息，讓他拉我進phongent內測體驗群</string>
+    <string name="chat_example_group_summary">幫我總結微信群聊，phongent內測體驗群今天都聊了些啥</string>
     <string name="chat_example_jobs">在Boss直聘上幫我投遞AI產品經理崗位，150個投滿</string>
     <string name="chat_example_music">幫我開啟汽水音樂，看廣告領取24小時聽歌VIP會員</string>
     <string name="chat_example_alarms">幫我訂明天早上9:40、9:50、10:00 的鬧鐘</string>

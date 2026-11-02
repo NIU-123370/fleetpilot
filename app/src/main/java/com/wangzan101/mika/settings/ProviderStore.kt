@@ -215,7 +215,7 @@ class ProviderStore(
     private val cipher: KeyCipher,
     private val usage: UsageSink = UsageSink { _, _ -> },
     private val newId: () -> String = { UUID.randomUUID().toString() },
-    /** 发给模型服务的 User-Agent;App 给 `Mika/<版本>`。 */
+    /** 发给模型服务的 User-Agent;App 给 `<应用名>/<版本>`,名字来自 R.string.app_name。默认值只给测试用。 */
     private val userAgent: String = "Mika",
     /** 列模型:接口类型、地址、Key、每个请求都带的头。 */
     private val modelLister: suspend (ProviderConfig.Kind, String, String?, Map<String, String>) -> ModelListResult = ::listAvailable,

@@ -17,6 +17,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import android.content.ClipboardManager
 import com.wangzan101.mika.about.CheckStatus
+import com.wangzan101.mika.R
 import com.wangzan101.mika.about.MikaLinks
 import com.wangzan101.mika.about.ReleaseInfo
 import com.wangzan101.mika.about.UpdateState
@@ -75,7 +76,10 @@ class AboutScreenTest {
     @Test
     fun showsHeroRowsNoteAndFooter() {
         about()
-        compose.onNodeWithText("Mika").assertIsDisplayed()
+        // 顶上那行是应用名。以前这里写着字面量 "Mika"，界面自己却按 R.string.app_name 念——
+        // 改名之后这条用例会在一个正确的界面上报红，所以断言也要跟着走同一个来源。
+        val appName = InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.app_name)
+        compose.onNodeWithText(appName).assertIsDisplayed()
         compose.onNodeWithText(AboutCopy.TAGLINE).assertIsDisplayed()
         compose.onNodeWithText("版本 0.1.0").assertIsDisplayed()
         compose.onNodeWithText("Beta").assertIsDisplayed()

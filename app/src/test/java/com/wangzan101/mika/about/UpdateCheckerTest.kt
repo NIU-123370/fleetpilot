@@ -41,7 +41,7 @@ class UpdateCheckerTest {
     fun stop() = server.shutdown()
 
     private fun checker(current: String = "0.1.0") = UpdateChecker(
-        tmp.root.resolve("update.json"), current,
+        tmp.root.resolve("update.json"), current, clientName = "phongent",
         releaseApi = server.url("/api").toString(),
         now = { clock },
     )
@@ -62,7 +62,8 @@ class UpdateCheckerTest {
         assertEquals(listOf("/api"), hits)
         val req = server.takeRequest()
         assertEquals("application/vnd.github+json", req.getHeader("Accept"))
-        assertTrue(req.getHeader("User-Agent")!!.startsWith("Mika/"))
+        // 客户端名由调用方注入（App 给 R.string.app_name）：这条以前钉死 "Mika/"，等于把上游的名字锁成契约。
+        assertEquals("phongent/0.1.0", req.getHeader("User-Agent"))
     }
 
     @Test

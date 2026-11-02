@@ -32,13 +32,15 @@ object Licenses {
     data class Entry(val name: String, val license: String, val note: String)
 
     const val GPL_SOURCE_OFFER =
-        "PRoot(GPL-2.0-or-later)与 talloc(LGPL-3.0-or-later)以独立程序的形式随 Mika 安装包发布,Mika 不链接它们。" +
-            "它们的完整源码、Mika 打的补丁和编译脚本随每个版本放在 Mika 的发布页,文件名 mika-<版本>-gpl-sources.tar.gz;" +
-            "源码仓库的 tools/sandbox/ 里也有源码地址、校验值、补丁与编译脚本,可以自己重新编译。"
+        "PRoot(GPL-2.0-or-later)与 talloc(LGPL-3.0-or-later)以独立程序的形式随本应用的安装包发布,本应用不链接它们。" +
+            "取源码的三样东西都在源码仓库里:tools/sandbox/sources.lock 记着两个包的版本、上游下载地址和 sha256;" +
+            "tools/sandbox/patches/ 是打进去的补丁;tools/sandbox/build-native.sh 是编译脚本(带 --check 会重编并与包里的产物比 SHA-256)。" +
+            "tools/sandbox/README.md 写了每次发布怎么把这些打成 gpl-sources 源码包——本仓库还没有发布页,要那份包就按 README 自己跑脚本。"
 
     const val RUNTIME_NOTE =
-        "运行 Python、Node 等程序用的系统随 Mika 安装包发布,来自 Alpine Linux 3.22,下面逐个列出其中的软件包与许可证。" +
-            "其中 GPL、LGPL、MPL 软件包的源码(Alpine 的构建配方与上游源码)同样放在 mika-<版本>-gpl-sources.tar.gz 里。"
+        "运行 Python、Node 等程序用的系统随本应用的安装包发布,来自 Alpine Linux 3.22,下面逐个列出其中的软件包与许可证。" +
+            "其中 GPL、LGPL、MPL 软件包的源码由 tools/sandbox/runtime-sources.py 收集:按包记录的 aports 提交取 Alpine 的构建配方与上游源码," +
+            "并逐个校验 SHA-512,产物同样进 gpl-sources 那个包。"
 
     /** 自带运行环境里的软件包(assets/runtime/packages.json,由 tools/sandbox/build-runtime.py 生成)。 */
     fun runtimePackages(json: String): List<Entry> =
@@ -49,8 +51,7 @@ object Licenses {
         }
 
     val ENTRIES = listOf(
-        Entry("Mika", "Apache-2.0", "Mika 本身,包括运行环境的启动器、其中的 mika 命令与技能脚本。许可证全文见本页顶上。"),
-        Entry("PRoot", "GPL-2.0-or-later", "运行 Python、Node 等程序用的环境,版本 5.4.0,打了一个补丁(PRoot 退出时结束所有子进程)。$GPL_SOURCE_OFFER"),
+        Entry("PRoot", "GPL-2.0-or-later", "运行 Python、Node 等程序用的环境,版本 5.4.0,改过(补丁都在 tools/sandbox/patches/ 里)。$GPL_SOURCE_OFFER"),
         Entry("talloc", "LGPL-3.0-or-later", "版本 2.4.3,未修改,静态链接进 PRoot 程序。可用 tools/sandbox/ 的源码与脚本重新链接。"),
         Entry("Apache Commons Compress", "Apache-2.0", "首次启动时解包自带的运行环境。Copyright 2002-2025 The Apache Software Foundation."),
         Entry("Apache Commons Codec", "Apache-2.0", "Apache Commons Compress 的依赖。Copyright 2002-2025 The Apache Software Foundation."),
@@ -90,7 +91,8 @@ fun LicensesScreen(onBack: () -> Unit) {
         runCatching { context.assets.open("runtime/packages.json").use { Licenses.runtimePackages(it.readBytes().decodeToString()) } }
             .getOrDefault(emptyList())
     }
-    val thirdParty = Licenses.ENTRIES.filter { it.name != "Mika" } + runtime
+    // ENTRIES 从前还有一条名字等于 App 的条目,列出来只为在这行按名字滤掉——它既不显示也容易被改名漏掉,现在整条列表就是第三方组件。
+    val thirdParty = Licenses.ENTRIES + runtime
     SubPage(AboutCopy.LICENSE_TITLE, onBack) {
         if (licenseText.isNotEmpty()) {
             MikaCard(Modifier.padding(bottom = 12.dp).testTag("license-text")) {
