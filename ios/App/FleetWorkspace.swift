@@ -32,13 +32,13 @@ struct FleetWorkspace:View {
     var body:some View {
         HStack(spacing:0){
             ScrollView{LazyVStack(spacing:14){
-                Button{focused=false;selection=nil;selectedGroup=nil}label:{VStack(spacing:4){Image(systemName:"square.grid.2x2.fill").font(.title2).frame(width:52,height:52);Text("全部").font(.caption2)}.padding(4).background(selection==nil ? Color.mint.opacity(0.14):.clear,in:RoundedRectangle(cornerRadius:16))}.buttonStyle(.plain)
+                Button{focused=false;selection=nil;selectedGroup=nil}label:{VStack(spacing:4){Image(systemName:"square.grid.2x2.fill").font(.title2).frame(width:52,height:52);Text("全部").font(.caption2)}.padding(4).background(selection==nil ? FleetPalette.accentSoft:.clear,in:RoundedRectangle(cornerRadius:16))}.buttonStyle(.plain)
                 ForEach(hub.groupNames,id:\.self){group in
                     HStack(spacing:0){Button{selection=nil;selectedGroup=group}label:{Text(group).font(.caption2).lineLimit(2)};Button{if !collapsedGroups.insert(group).inserted{collapsedGroups.remove(group)}}label:{Image(systemName:collapsedGroups.contains(group) ? "chevron.right":"chevron.down").font(.caption2).frame(width:22,height:32)}}
                     if !collapsedGroups.contains(group){ForEach(allAgents.filter{hub.group(of:$0.id)==group}){agent in
-                    VStack(spacing:1){AoraAnimatedAvatar(phase:agent.phase,active:agent.client.connected,shape:agent.avatarShape,hue:agent.avatarHue).frame(width:58,height:58);Text(agent.name).font(.caption2).lineLimit(2).frame(width:60);Circle().fill(agent.client.connected ? .green:.gray).frame(width:5,height:5)}.padding(.vertical,5).background(selection==agent.id ? Color.mint.opacity(0.14):.clear,in:RoundedRectangle(cornerRadius:16))
+                    VStack(spacing:1){AoraAnimatedAvatar(phase:agent.phase,active:agent.client.connected,shape:agent.avatarShape,hue:agent.avatarHue).frame(width:58,height:58);Text(agent.name).font(.caption2).lineLimit(2).frame(width:60);Circle().fill(agent.client.connected ? .green:.gray).frame(width:5,height:5)}.padding(.vertical,5).background(selection==agent.id ? FleetPalette.accentSoft:.clear,in:RoundedRectangle(cornerRadius:16))
                     .frame(width:68,height:92)
-                    .background(Color.mint.opacity(pressingDevice==agent.id || mentionedDevice==agent.id ? 0.18:0),in:RoundedRectangle(cornerRadius:16))
+                    .background(FleetPalette.accent.opacity(pressingDevice==agent.id || mentionedDevice==agent.id ? 0.18:0),in:RoundedRectangle(cornerRadius:16))
                     .animation(.spring(response:0.28,dampingFraction:0.65),value:pressingDevice)
                     .animation(.spring(response:0.28,dampingFraction:0.65),value:mentionedDevice)
                     .overlay{AvatarTouchSurface(label:agent.name,onTap:{focused=false;selectedGroup=nil;selection=agent.id;hub.select(agent)},onPress:{down in pressingDevice=down ? agent.id:nil},onLongPress:{
@@ -61,7 +61,7 @@ struct FleetWorkspace:View {
                         for agent in allAgents {if !(await agent.client.stopAllTasks()){failed.append(agent.name)}}
                         stoppingAll=false
                         if !failed.isEmpty{routingError="结束任务未成功："+failed.joined(separator:"、")}
-                    }} label:{Image(systemName:"stop.circle.fill").foregroundStyle(.red).frame(width:36,height:36)}
+                    }} label:{Image(systemName:"stop.circle.fill").foregroundStyle(FleetPalette.bad).frame(width:36,height:36)}
                     .disabled(stoppingAll).accessibilityLabel("结束所有 agent 的任务")
                     Menu{
                         if !templates.isEmpty{Menu("任务模板"){ForEach(templates.keys.sorted(),id:\.self){title in Menu(title){Button("使用"){input=templates[title] ?? "";selection=nil};Button("删除",role:.destructive){templates.removeValue(forKey:title);UserDefaults.standard.set(templates,forKey:"fleetTaskTemplates")}}}}}
@@ -75,7 +75,7 @@ struct FleetWorkspace:View {
                 allChat
             }
 
-        }.background(Color(uiColor:.systemGroupedBackground))
+        }.background(FleetWallpaper())
         .safeAreaInset(edge:.bottom,spacing:0){composer}
         .onChange(of:photoItems){_,items in
             loadingPhotos=true
@@ -161,7 +161,7 @@ struct FleetWorkspace:View {
                     }
                     if planning {Label("正在分配任务…",systemImage:"sparkles").font(.caption)}
                 HStack(alignment:.bottom,spacing:10){
-                    TextField("发消息或描述各设备的任务",text:$input,axis:.vertical).lineLimit(1...5).focused($focused).disabled(planning).padding(.horizontal,14).padding(.vertical,12).background(Color(uiColor:.secondarySystemGroupedBackground),in:RoundedRectangle(cornerRadius:20))
+                    TextField("发消息或描述各设备的任务",text:$input,axis:.vertical).lineLimit(1...5).focused($focused).disabled(planning).padding(.horizontal,14).padding(.vertical,12).fleetGlass(cornerRadius:20)
                     PhotosPicker(selection:$photoItems,maxSelectionCount:4,matching:.images){Image(systemName:"plus.circle").font(.system(size:30,weight:.regular)).frame(width:42,height:46)}.disabled(planning || loadingPhotos).accessibilityLabel("添加图片")
                     if !input.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty{Button{sendTasks()}label:{Image(systemName:"arrow.up.circle.fill").font(.system(size:32)).frame(width:40,height:46)}.disabled(loadingPhotos || planning || store.sending || !agents.contains{$0.client.connected})}
                     if focused{Button{focused=false}label:{Image(systemName:"keyboard.chevron.compact.down").frame(width:28,height:46)}.accessibilityLabel("收起键盘")}
@@ -175,7 +175,7 @@ struct FleetWorkspace:View {
             ScrollView{
                 LazyVStack(alignment:.leading,spacing:18){
                     ForEach(store.batches.filter{($0.deliveries.contains{delivery in agents.contains{$0.id==delivery.deviceID} && (selection==nil || delivery.deviceID==selection)})}){batch in
-                        HStack{Spacer(minLength:30);Text(batch.text).padding(12).foregroundStyle(.white).background(.blue,in:RoundedRectangle(cornerRadius:18))}
+                        HStack{Spacer(minLength:30);Text(batch.text).padding(12).foregroundStyle(.white).background(FleetPalette.accent,in:RoundedRectangle(cornerRadius:18))}
                         ForEach(batch.deliveries.filter{delivery in agents.contains{$0.id==delivery.deviceID} && (selection==nil || delivery.deviceID==selection)}){delivery in
                             VStack(alignment:.leading,spacing:8){
                                 HStack(spacing:4){if let agent=agents.first(where:{$0.id==delivery.deviceID}){AoraAnimatedAvatar(phase:delivery.phase,active:delivery.phase=="running",shape:agent.avatarShape,hue:agent.avatarHue).frame(width:30,height:30)};Text(delivery.name).font(.caption.bold());Spacer();Text(delivery.status).font(.caption2).foregroundStyle(.secondary)}
@@ -185,7 +185,7 @@ struct FleetWorkspace:View {
                                 }
 
                                 if let ex=delivery.exchange {NativeExchangeView(exchange:ex,client:agents.first{$0.id==delivery.deviceID}?.client)}else if !delivery.reply.isEmpty{AndroidMarkdown(text:delivery.reply)}
-                            }.padding(12).frame(maxWidth:.infinity,alignment:.leading).background(Color(uiColor:.secondarySystemGroupedBackground),in:RoundedRectangle(cornerRadius:16))
+                            }.padding(12).frame(maxWidth:.infinity,alignment:.leading).background(FleetPalette.panel,in:RoundedRectangle(cornerRadius:16))
                         }
                     }
                     Color.clear.frame(height:1).id("fleet-bottom")

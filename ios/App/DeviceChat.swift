@@ -48,7 +48,7 @@ struct Dashboard:View {
                             }.padding(14).frame(maxWidth:.infinity,alignment:.leading).background(.thinMaterial,in:RoundedRectangle(cornerRadius:18))
                         }
                         if !bridge.connected {
-                            Button("连接中断，点击重试"){Task{await bridge.refresh(force:true)}}.font(.caption).foregroundStyle(.orange)
+                            Button("连接中断，点击重试"){Task{await bridge.refresh(force:true)}}.font(.caption).foregroundStyle(FleetPalette.warn)
                         }
                         if notificationReply != nil {
                             ForEach(replyCommandIDs,id:\.self){id in
@@ -56,7 +56,7 @@ struct Dashboard:View {
                                     Text(replyDrafts[id] ?? "").frame(maxWidth:.infinity,alignment:.trailing)
                                     if let task=bridge.snapshot.queuedTasks?.first(where:{$0.id==id}){
                                         Text(["queued":"已排队","dispatching":"正在启动","running":"执行中","completed":"已完成","failed":"执行失败","cancelled":"已取消","uncertain":"待核实"][task.state] ?? task.state).font(.caption).foregroundStyle(.secondary)
-                                        if !task.error.isEmpty{Text(task.error).foregroundStyle(.orange)}
+                                        if !task.error.isEmpty{Text(task.error).foregroundStyle(FleetPalette.warn)}
                                         if let result=task.result,!result.isEmpty{Text(result).textSelection(.enabled)}
                                     }else if let pending=bridge.chatMessages.first(where:{$0.id==id+"-user"}){Text(pending.status).font(.caption).foregroundStyle(.secondary)}
                                 }.padding(12).background(.thinMaterial,in:RoundedRectangle(cornerRadius:16))
@@ -77,19 +77,19 @@ struct Dashboard:View {
                                     Text(message.text).textSelection(.enabled)
                                     Text(message.status).font(.caption2).foregroundStyle(.secondary)
                                 }.padding(14)
-                                    .background(message.role=="user" ? Color.mint.opacity(0.16) : Color(uiColor:.secondarySystemGroupedBackground),in:RoundedRectangle(cornerRadius:20))
+                                    .background(message.role=="user" ? FleetPalette.accent.opacity(0.16) : Color(uiColor:.secondarySystemGroupedBackground),in:RoundedRectangle(cornerRadius:20))
                                 if message.role != "user" {Spacer(minLength:36)}
                             }.id(message.id)
                         }
-                        if let status=bridge.commandStatus,status.contains("不确定") || status.contains("请先") {Text(status).font(.caption).foregroundStyle(.orange)}
-                        if !bridge.connected {Text(bridge.status).font(.caption).foregroundStyle(.orange)}
+                        if let status=bridge.commandStatus,status.contains("不确定") || status.contains("请先") {Text(status).font(.caption).foregroundStyle(FleetPalette.warn)}
+                        if !bridge.connected {Text(bridge.status).font(.caption).foregroundStyle(FleetPalette.warn)}
                         if ["waiting","takeover","confirmation"].contains(bridge.snapshot.phase),bridge.snapshot.currentConversationId == bridge.snapshot.conversationId {
                             VStack(alignment:.leading,spacing:10) {
-                                Label("需要处理",systemImage:"exclamationmark.circle").font(.headline).foregroundStyle(.orange)
+                                Label("需要处理",systemImage:"exclamationmark.circle").font(.headline).foregroundStyle(FleetPalette.warn)
                                 Text(bridge.snapshot.detail).textSelection(.enabled)
                                 if bridge.snapshot.phase=="waiting" {Button("回答 agent") {inputFocused=true}}
                                 else {Text("请在安卓端处理，状态会自动同步").font(.caption).foregroundStyle(.secondary)}
-                            }.padding(16).frame(maxWidth:.infinity,alignment:.leading).background(.orange.opacity(0.1),in:RoundedRectangle(cornerRadius:18))
+                            }.padding(16).frame(maxWidth:.infinity,alignment:.leading).background(FleetPalette.warn.opacity(0.1),in:RoundedRectangle(cornerRadius:18))
                         }
                         }
                         Color.clear.frame(height:1).id("bottom")
@@ -141,7 +141,7 @@ struct Dashboard:View {
     private var inbox:some View {
         ScrollView {
             VStack(alignment:.leading,spacing:16) {
-                if bridge.snapshot.notificationAccess == false {Text("安卓未开启通知访问权限").foregroundStyle(.orange)}
+                if bridge.snapshot.notificationAccess == false {Text("安卓未开启通知访问权限").foregroundStyle(FleetPalette.warn)}
                 MessageAlertSettings()
                 MessageInbox(bridge:bridge) {message in inputFocused=false;reply="";replyTarget=message}
             }.padding()
@@ -151,7 +151,7 @@ struct Dashboard:View {
         VStack(spacing:8) {
             if notificationReply != nil {
                 if !bridge.connected {
-                    Button("设备已断开，点击重连"){Task{await bridge.refresh(force:true)}}.font(.caption).foregroundStyle(.orange)
+                    Button("设备已断开，点击重连"){Task{await bridge.refresh(force:true)}}.font(.caption).foregroundStyle(FleetPalette.warn)
                 } else if bridge.snapshot.busy {
                     VStack(alignment:.leading,spacing:8) {
                         Text(currentExchange?.phase=="unlock" ? "之前的任务等待解锁；解锁后自动继续" : currentExchange?.phase=="paused" ? "之前的任务已暂停：" + bridge.snapshot.detail : "设备有未结束任务，新回复将排队").font(.caption).foregroundStyle(.secondary)
@@ -171,7 +171,7 @@ struct Dashboard:View {
                         ForEach(Array(photoItems.enumerated()),id:\.offset){index,item in
                             ChatPhotoPreview(item:item)
                                 .overlay(alignment:.topTrailing){
-                                    Button{photoItems.remove(at:index)}label:{Image(systemName:"minus.circle.fill").symbolRenderingMode(.palette).foregroundStyle(.white,.red).font(.title3)}
+                                    Button{photoItems.remove(at:index)}label:{Image(systemName:"minus.circle.fill").symbolRenderingMode(.palette).foregroundStyle(.white,FleetPalette.bad).font(.title3)}
                                         .disabled(uploading).accessibilityLabel("移除第 \(index+1) 张图片")
                                 }
                         }
@@ -188,11 +188,11 @@ struct Dashboard:View {
             if notificationReply == nil && bridge.snapshot.busy && !waitingForAnswer && ownsCurrentTask {
                 Button {inputFocused=false;Task{await bridge.stopAllTasks()}} label:{Image(systemName:"stop.fill").frame(width:38,height:38).background(.white.opacity(0.12),in:Circle())}.accessibilityLabel("停止任务").disabled(bridge.sending)
             } else {
-                Button(action:send) {Image(systemName:"arrow.up").font(.headline).frame(width:38,height:38).background(canSend ? Color.mint : Color.gray.opacity(0.3),in:Circle()).foregroundStyle(canSend ? .black : .secondary)}.disabled(!canSend).accessibilityLabel("发送")
+                Button(action:send) {Image(systemName:"arrow.up").font(.headline).frame(width:38,height:38).background(canSend ? FleetPalette.accent : FleetPalette.ink3.opacity(0.3),in:Circle()).foregroundStyle(canSend ? .black : .secondary)}.disabled(!canSend).accessibilityLabel("发送")
             }
             }
         }.padding(8).modifier(AgentComposerGlass())
-            .overlay(RoundedRectangle(cornerRadius:28).stroke(LinearGradient(colors:[.white.opacity(0.24),.mint.opacity(0.13),.white.opacity(0.04)],startPoint:.topLeading,endPoint:.bottomTrailing),lineWidth:0.6).allowsHitTesting(false))
+            .overlay(RoundedRectangle(cornerRadius:28).stroke(LinearGradient(colors:[.white.opacity(0.24),FleetPalette.accent.opacity(0.13),.white.opacity(0.04)],startPoint:.topLeading,endPoint:.bottomTrailing),lineWidth:0.6).allowsHitTesting(false))
             .alert("图片未发送",isPresented:Binding(get:{imageError != nil},set:{if !$0{imageError=nil}})){Button("好",role:.cancel){imageError=nil}}message:{Text(imageError ?? "")}
             .shadow(color:.black.opacity(0.18),radius:12,y:5).padding(.horizontal,14).padding(.vertical,10)
     }
@@ -245,7 +245,7 @@ private struct AgentComposerGlass:ViewModifier {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     func body(content:Content)->some View {
         if reduceTransparency {content.background(Color(uiColor:.secondarySystemBackground),in:RoundedRectangle(cornerRadius:28))}
-        else if #available(iOS 26.0,*) {content.background {RoundedRectangle(cornerRadius:28).fill(.clear).glassEffect(.regular.tint(.mint.opacity(0.06)),in:RoundedRectangle(cornerRadius:28)).allowsHitTesting(false)}}
+        else if #available(iOS 26.0,*) {content.background {RoundedRectangle(cornerRadius:28).fill(.clear).glassEffect(.regular.tint(FleetPalette.accent.opacity(0.06)),in:RoundedRectangle(cornerRadius:28)).allowsHitTesting(false)}}
         else {content.background(.ultraThinMaterial,in:RoundedRectangle(cornerRadius:28))}
     }
 }

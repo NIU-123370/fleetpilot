@@ -33,7 +33,7 @@ struct AoraRing: Shape {
 }
 struct AoraAvatar: View {
     var phase: String
-    var tint: Color = .mint
+    var tint: Color = FleetPalette.accent
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.isLuminanceReduced) private var dimmed
     var body: some View {

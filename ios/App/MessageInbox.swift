@@ -46,7 +46,7 @@ struct MessageInbox:View {
                     ConversationList(bridge:bridge,app:app,reply:reply)
                 } label: {
                     HStack(spacing:14) {
-                        Image(systemName:"app.fill").font(.title).foregroundStyle(.mint)
+                        Image(systemName:"app.fill").font(.title).foregroundStyle(FleetPalette.accent)
                         VStack(alignment:.leading,spacing:5) {
                             Text(app).font(.headline)
                             Text(messages.max(by:{$0.time<$1.time})?.text ?? "").lineLimit(1).font(.caption).foregroundStyle(.secondary)

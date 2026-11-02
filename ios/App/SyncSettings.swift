@@ -288,7 +288,7 @@ struct FleetQueueView:View {
     var body:some View {
         List{ForEach(hub.agents.filter{$0.approved && !$0.demo}){device in
             Section(device.name){
-                if let error=errors[device.id]{Text(error).foregroundStyle(.orange)}
+                if let error=errors[device.id]{Text(error).foregroundStyle(FleetPalette.warn)}
                 ForEach(records[device.id] ?? []){task in
                     VStack(alignment:.leading,spacing:6){Text(task.text).lineLimit(3);Text(["queued":"排队中","dispatching":"正在启动","running":"执行中","completed":"已完成","failed":"失败","cancelled":"已取消","uncertain":"待核实"][task.state] ?? task.state).font(.caption).foregroundStyle(.secondary)
                         if let result=task.result,!result.isEmpty{Text(result).font(.body)}
@@ -382,7 +382,7 @@ struct FleetReports:View {
     private var devices:[NearbyAgent]{hub.agents.filter{$0.approved && !$0.demo}}
     var body:some View{List{
         ForEach(devices){device in Section(device.name){
-            if let error=errors[device.id]{Text(error).foregroundStyle(.orange)}
+            if let error=errors[device.id]{Text(error).foregroundStyle(FleetPalette.warn)}
             if let value=values[device.id]{
                 if usage{
                     let rows=value["items"] as? [[String:Any]] ?? []
@@ -446,7 +446,7 @@ private struct FleetWorkspaceFiles:View {
     @State private var deleting:WorkspaceEntry?
     @State private var busy=false
     var body:some View{List{
-        if let error{Section{Text(error).foregroundStyle(.orange)}}
+        if let error{Section{Text(error).foregroundStyle(FleetPalette.warn)}}
         Section{if !path.isEmpty{Button("上一级"){path=path.split(separator:"/").dropLast().joined(separator:"/");Task{await load()}}};Text(path.isEmpty ? "工作区":path).font(.caption).foregroundStyle(.secondary)}
         ForEach(entries){entry in HStack{Button{if entry.directory{path=entry.path;Task{await load()}}else{download(entry)}}label:{Label(entry.name,systemImage:entry.directory ? "folder":"doc")};Spacer();if !entry.directory{Button(role:.destructive){deleting=entry}label:{Image(systemName:"trash")}}}.buttonStyle(.borderless).disabled(busy)}
         if let downloaded{Section("已下载"){ShareLink(item:downloaded){Label("保存或分享文件",systemImage:"square.and.arrow.up")};if let image=workspaceThumbnail(downloaded){Image(uiImage:image).resizable().scaledToFit()}}}

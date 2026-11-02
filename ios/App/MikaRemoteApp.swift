@@ -13,6 +13,7 @@ import SwiftUI
                 FleetNotifications(hub:hub).tag(2).tabItem{Label("消息",systemImage:"bell")}
                 FleetManagement(hub:hub).tag(3).tabItem{Label("设置",systemImage:"slider.horizontal.3")}
             }
+                .tint(FleetPalette.accent)
                 .task { await MessageAlerts.shared.prepare() }
                 .onReceive(NotificationCenter.default.publisher(for:.agentMessageOpened)) { event in
                     selectedTab=0
@@ -62,7 +63,7 @@ struct FleetManagement:View {
                 NavigationLink{FleetExecutionSettings(hub:hub,services:true)}label:{Label("电脑连接 MCP",systemImage:"desktopcomputer").padding(.vertical,5)}
                 NavigationLink{KnowledgeView(hub:hub,defaultDevice:"all")}label:{Label("记忆与技能",systemImage:"heart").padding(.vertical,5)}
             }
-        }.listStyle(.insetGrouped).tint(.teal).navigationTitle("设置")}
+        }.listStyle(.insetGrouped).tint(FleetPalette.accent).navigationTitle("设置")}
     }
 }
 struct FleetNotifications:View {

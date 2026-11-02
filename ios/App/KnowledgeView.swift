@@ -54,7 +54,7 @@ struct KnowledgeView:View {
             if !results.isEmpty {Section("保存结果") {ForEach(results.keys.sorted(),id:\.self){key in Text(results[key] ?? "")}}}
             ForEach(destinations) {agent in
                 Section(agent.name) {
-                    if let notice=notices[agent.id] {Text(notice).font(.caption).foregroundStyle(.orange)}
+                    if let notice=notices[agent.id] {Text(notice).font(.caption).foregroundStyle(FleetPalette.warn)}
                     ForEach((items[agent.id] ?? []).filter{$0.type==type}) {item in
                         NavigationLink {
                             KnowledgeEditor(agent:agent,item:item)

@@ -40,11 +40,11 @@ struct ModelChatView:View {
                                 HStack {
                                     if message.role=="user" {Spacer(minLength:36)}
                                     Text(message.text.isEmpty ? "…":message.text).textSelection(.enabled).padding(14)
-                                        .background(message.role=="user" ? Color.mint.opacity(0.2):Color.white.opacity(0.07),in:RoundedRectangle(cornerRadius:16))
+                                        .background(message.role=="user" ? FleetPalette.accent.opacity(0.2):Color.white.opacity(0.07),in:RoundedRectangle(cornerRadius:16))
                                     if message.role != "user" {Spacer(minLength:36)}
                                 }.id(message.id)
                             }
-                            if let error=chat.error {Text(error).font(.caption).foregroundStyle(.orange)}
+                            if let error=chat.error {Text(error).font(.caption).foregroundStyle(FleetPalette.warn)}
                         }.padding()
                     }.onChange(of:chat.messages.last?.text){_,_ in if let id=chat.messages.last?.id{proxy.scrollTo(id,anchor:.bottom)}}
                 }

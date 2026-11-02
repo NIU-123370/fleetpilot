@@ -23,7 +23,7 @@ struct ModelSettingsView:View {
                 Section("添加服务商") {
                     ForEach(ProviderPreset.all) { preset in
                         Button { adding=preset } label: {
-                            HStack { Text(preset.name); Spacer(); Text(preset.kind.label).font(.caption).foregroundStyle(.secondary); Image(systemName:"plus.circle").foregroundStyle(.mint) }
+                            HStack { Text(preset.name); Spacer(); Text(preset.kind.label).font(.caption).foregroundStyle(.secondary); Image(systemName:"plus.circle").foregroundStyle(FleetPalette.accent) }
                         }.foregroundStyle(.primary)
                     }
                 }
@@ -33,7 +33,7 @@ struct ModelSettingsView:View {
                         Text(account.status).font(.caption).foregroundStyle(.secondary)
                     }
                 }
-                if let error=catalog.errors["settings"]{Text(error).foregroundStyle(.orange)}
+                if let error=catalog.errors["settings"]{Text(error).foregroundStyle(FleetPalette.warn)}
             }.navigationTitle("模型").navigationBarTitleDisplayMode(.inline)
                 .toolbar{Button("完成"){dismiss()}}
                 .sheet(item:$adding){preset in AddModelProviderView(initialPreset:preset)}
@@ -97,7 +97,7 @@ struct AddModelProviderView:View {
                 Section("添加服务商") {
                     ScrollView(.horizontal,showsIndicators:false){HStack {ForEach(ProviderPreset.all){item in
                         Button(item.name){preset=item.name;draft=ModelProvider(name:item.name,kind:item.kind,baseURL:item.baseURL,sessionHeader:item.sessionHeader);error=nil}
-                            .buttonStyle(.bordered).tint(preset==item.name ? .mint:.gray)
+                            .buttonStyle(.bordered).tint(preset==item.name ? FleetPalette.accent:FleetPalette.ink3)
                     }}}.listRowInsets(EdgeInsets(top:12,leading:0,bottom:12,trailing:0))
                     if preset=="自定义" {
                         TextField("名称",text:$draft.name)
@@ -114,7 +114,7 @@ struct AddModelProviderView:View {
                         let provider=draft,model=manual.trimmingCharacters(in:.whitespacesAndNewlines)
                         Task {do{try await catalog.testAndSave(provider,manualModel:model);dismiss()}catch{self.error=error.localizedDescription};testing=false}
                     }.disabled(testing || draft.baseURL.isEmpty || (draft.apiKey.isEmpty && preset != "自定义"))
-                    if let error{Text(error).font(.caption).foregroundStyle(.orange)}
+                    if let error{Text(error).font(.caption).foregroundStyle(FleetPalette.warn)}
                 }.disabled(testing)
             }.navigationTitle("添加服务商").navigationBarTitleDisplayMode(.inline)
                 .toolbar{Button("取消"){dismiss()}.disabled(testing)}
@@ -156,7 +156,7 @@ struct ModelProviderDetail:View {
                                 if model.name != model.id{Text(model.id).font(.caption).foregroundStyle(.secondary)}
                                 HStack {
                                     ForEach(ModelRole.allCases,id:\.self){role in
-                                        Button(role.title){catalog.choose(role,provider:provider,model:model.id)}.buttonStyle(.bordered).tint(catalog.selection(role)==ModelSelection(providerId:id,model:model.id) ? .mint:.gray)
+                                        Button(role.title){catalog.choose(role,provider:provider,model:model.id)}.buttonStyle(.bordered).tint(catalog.selection(role)==ModelSelection(providerId:id,model:model.id) ? FleetPalette.accent:FleetPalette.ink3)
                                     }
                                 }.font(.caption)
                                 Button("测试调用"){Task{await catalog.probe(provider,model:model.id)}}.font(.caption).disabled(catalog.busy.contains(id))

@@ -55,7 +55,7 @@ struct DeviceWorkspace:View {
                     }
                 } label:{Label("新建聊天",systemImage:"square.and.pencil").font(.headline)}
                 .disabled(selected == nil || selected?.client.connected != true || selected?.client.sending == true || selected?.client.switchingChat == true || selected?.client.snapshot.busy == true)
-                if let agent=selected,let status=agent.client.commandStatus,!status.hasPrefix("指令状态") {Text(status).font(.caption).foregroundStyle(.orange)}
+                if let agent=selected,let status=agent.client.commandStatus,!status.hasPrefix("指令状态") {Text(status).font(.caption).foregroundStyle(FleetPalette.warn)}
                 if let agent=selected {
                     NavigationLink {KnowledgeView(hub:hub,defaultDevice:agent.id)} label:{Label("记忆与技能",systemImage:"heart")}
                 }
@@ -104,12 +104,12 @@ private struct DeviceConversationGroup:View {
     private var chats:[DeviceConversation] {
         bridge.conversations.filter{search.isEmpty || agent.name.localizedCaseInsensitiveContains(search) || $0.title.localizedCaseInsensitiveContains(search) || $0.preview.localizedCaseInsensitiveContains(search)}
     }
-    private var color:Color {let colors:[Color]=[.mint,.orange,.purple,.blue,.pink];return colors[agent.id.utf8.reduce(0){$0+Int($1)} % colors.count]}
+    private var color:Color {let colors:[Color]=[FleetPalette.accent,FleetPalette.accent.opacity(0.78),FleetPalette.ok,FleetPalette.warn,FleetPalette.bad];return colors[agent.id.utf8.reduce(0){$0+Int($1)} % colors.count]}
     var body:some View {
         if search.isEmpty || agent.name.localizedCaseInsensitiveContains(search) || !chats.isEmpty {
             DisclosureGroup(isExpanded:$expanded) {
                 Button("当前聊天",action:onDevice).font(.caption).foregroundStyle(color)
-                if let error=bridge.conversationError {Text(error).font(.caption).foregroundStyle(.orange)}
+                if let error=bridge.conversationError {Text(error).font(.caption).foregroundStyle(FleetPalette.warn)}
                 ForEach(chats) {chat in
                     Button {onConversation(chat)} label:{
                         HStack(alignment:.top,spacing:8) {
@@ -119,7 +119,7 @@ private struct DeviceConversationGroup:View {
                                     Spacer(minLength:4)
                                     if bridge.chatUnread(chat) {Circle().fill(color).frame(width:6,height:6)}
                                 }
-                                Text(chat.needsAttention ? "需要处理" : chat.busy ? "正在执行" : chat.preview).font(.caption).foregroundStyle(chat.needsAttention ? Color.orange : .secondary).lineLimit(1)
+                                Text(chat.needsAttention ? "需要处理" : chat.busy ? "正在执行" : chat.preview).font(.caption).foregroundStyle(chat.needsAttention ? FleetPalette.warn : .secondary).lineLimit(1)
                                 if chat.updatedAt>0 {Text(Date(timeIntervalSince1970:chat.updatedAt),style:.relative).font(.caption2).foregroundStyle(.tertiary)}
                             }
                             if selectedDevice==agent.id && bridge.snapshot.currentConversationId==chat.id {Image(systemName:"checkmark").font(.caption).foregroundStyle(color)}
@@ -134,7 +134,7 @@ private struct DeviceConversationGroup:View {
                     AoraAnimatedAvatar(phase:agent.phase,active:bridge.snapshot.busy,shape:agent.avatarShape,hue:agent.avatarHue).frame(width:38,height:38).background(color.opacity(0.16),in:Circle())
                     VStack(alignment:.leading,spacing:3) {
                         Text(agent.name).font(.headline).lineLimit(1)
-                        Text(bridge.connected ? bridge.snapshot.title : "离线").font(.caption2).foregroundStyle(bridge.connected ? color : .gray)
+                        Text(bridge.connected ? bridge.snapshot.title : "离线").font(.caption2).foregroundStyle(bridge.connected ? color : FleetPalette.ink3)
                     }
                 }.contextMenu{Button("重命名",action:rename)}
             }
@@ -152,7 +152,7 @@ private struct AgentNoticeBanner:View {
             Color.clear.frame(width:1,height:1).allowsHitTesting(false)
             if let notice=bridge.notice {
                 HStack(spacing:10) {
-                    Image(systemName:"exclamationmark.circle.fill").foregroundStyle(.orange)
+                    Image(systemName:"exclamationmark.circle.fill").foregroundStyle(FleetPalette.warn)
                     Text(notice.text).font(.subheadline).fixedSize(horizontal:false,vertical:true)
                     Spacer(minLength:0)
                     Button {bridge.notice=nil} label:{Image(systemName:"xmark").font(.caption.bold()).frame(width:32,height:32)}.accessibilityLabel("关闭提示")

@@ -52,6 +52,6 @@ struct MessageAlertSettings:View {
                 if let url=URL(string:UIApplication.openSettingsURLString){UIApplication.shared.open(url)}
             }.font(.caption)
         }
-        if !alerts.status.isEmpty{Text(alerts.status).font(.caption).foregroundStyle(.orange)}
+        if !alerts.status.isEmpty{Text(alerts.status).font(.caption).foregroundStyle(FleetPalette.warn)}
     }
 }

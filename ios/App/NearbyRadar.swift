@@ -61,12 +61,12 @@ struct NearbyRadar:View {
                                     AoraAnimatedAvatar(phase:agent.phase,active:scenePhase == .active,shape:agent.avatarShape,hue:agent.avatarHue).frame(width:38,height:38)
                                     Text(agent.name).font(.caption.weight(.medium)).lineLimit(1)
                                     Text(hub.group(of:agent.id)).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
-                                }.frame(maxWidth:.infinity).padding(.vertical,10).background(Color(uiColor:.secondarySystemGroupedBackground),in:RoundedRectangle(cornerRadius:12))
+                                }.frame(maxWidth:.infinity).padding(.vertical,10).background(FleetPalette.panel,in:RoundedRectangle(cornerRadius:12))
                             }.buttonStyle(.plain).contextMenu{deviceMenu(agent)}
                         }
                     }
                 }.padding(18)
-            }.background(Color(uiColor:.systemGroupedBackground)).navigationTitle("设备").navigationBarTitleDisplayMode(.inline)
+            }.background(FleetWallpaper()).navigationTitle("设备").navigationBarTitleDisplayMode(.inline)
             .onChange(of:hub.renameError){_,value in if let value{error=value;hub.renameError=nil}}
             .onChange(of:pages){_,value in page=min(page,value-1)}
             .sheet(item:$selected){agent in AgentPanel(agent:agent,hub:hub)}
@@ -112,9 +112,9 @@ struct DeviceOrb:View {
     var body:some View {
         VStack(spacing:4){
             ZStack(alignment:.bottomTrailing){
-                Circle().stroke(agent.approved ? Color.mint.opacity(0.6):Color.primary.opacity(0.12),lineWidth:1).frame(width:size,height:size)
+                Circle().stroke(agent.approved ? FleetPalette.accent.opacity(0.6):Color.primary.opacity(0.12),lineWidth:1).frame(width:size,height:size)
                 AoraAnimatedAvatar(phase:agent.phase,active:active && agent.available,shape:agent.avatarShape,hue:agent.avatarHue).frame(width:size,height:size)
-                Circle().fill(agent.demo ? Color.purple:agent.available && agent.client.connected ? Color.mint:agent.available ? Color.orange:Color.gray).frame(width:9,height:9).overlay(Circle().stroke(Color.black,lineWidth:2)).offset(x:-5,y:-4)
+                Circle().fill(agent.demo ? FleetPalette.ink3:agent.available && agent.client.connected ? FleetPalette.accent:agent.available ? FleetPalette.warn:FleetPalette.ink3).frame(width:9,height:9).overlay(Circle().stroke(Color.black,lineWidth:2)).offset(x:-5,y:-4)
             }
             Text(agent.name).font(.caption.weight(.medium)).lineLimit(1).frame(width:size+24)
             Text(agent.demo ? "演示 · "+agent.client.snapshot.title:agent.connection).font(.system(size:10)).foregroundStyle(.secondary).lineLimit(1).frame(width:size+24)
@@ -137,7 +137,7 @@ struct AgentPanel:View {
                     Text(agent.name).font(.title.bold())
                     Text(agent.connection).foregroundStyle(.secondary)
                     Text("请在安卓端允许连接").multilineTextAlignment(.center).foregroundStyle(.secondary)
-                    Button(agent.connection == "等待安卓允许" ? "等待安卓允许…":"申请连接",systemImage:"link") {Task{await hub.invite(agent)}}.buttonStyle(.borderedProminent).tint(.mint).disabled(agent.connection == "等待安卓允许" || !agent.available)
+                    Button(agent.connection == "等待安卓允许" ? "等待安卓允许…":"申请连接",systemImage:"link") {Task{await hub.invite(agent)}}.buttonStyle(.borderedProminent).tint(FleetPalette.accent).disabled(agent.connection == "等待安卓允许" || !agent.available)
                     Spacer()
                 }.padding(30).navigationTitle("连接 agent").navigationBarTitleDisplayMode(.inline)
             }

@@ -31,7 +31,10 @@ struct AoraAnimatedAvatar: UIViewRepresentable {
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { ready = true; apply(webView) }
         func apply(_ view: WKWebView) {
             let signature = id + String(active) + shape + String(describing:hue); guard ready, signature != last else { return }; last = signature
-            let filter=hue.map{"sepia(1) saturate(2) hue-rotate(\($0)deg) brightness(0.84)"} ?? "saturate(0.85) brightness(0.84)"
+            // HUD-1:头像不许各占一种色相。hue 只当"第几台"的种子用来排明度,色相统一旋到紫带,
+            // 设备靠形状与明度区分,不靠换颜色。
+            let brightness = 0.80 + ((abs(hue ?? 0).truncatingRemainder(dividingBy: 5)) / 5) * 0.12
+            let filter = "sepia(1) hue-rotate(250deg) saturate(0.55) brightness(\(String(format: "%.2f", brightness)))"
             view.evaluateJavaScript("document.getElementById('bot').style.filter='\(filter)';window.setMikaShape('\(shape)');window.setMikaState('\(id)',\(active ? "true" : "false"))", completionHandler: nil)
         }
         func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) { decisionHandler(navigationAction.request.url?.isFileURL == true ? .allow : .cancel) }

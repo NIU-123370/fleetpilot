@@ -40,15 +40,15 @@ struct SingleDeviceDrawer:View {
                     Button {Task{if await bridge.newChat(){close()}}} label:{Label("新对话",systemImage:"square.and.pencil").font(.title3)}
                         .disabled(!bridge.connected || bridge.snapshot.busy || bridge.sending || bridge.switchingChat)
                     NavigationLink {KnowledgeView(hub:hub,defaultDevice:agent.id)} label:{Label("记忆与技能",systemImage:"heart").font(.title3)}
-                    if let message=bridge.commandStatus,!message.hasPrefix("指令状态") {Text(message).font(.caption).foregroundStyle(.orange)}
-                    if let error=bridge.conversationError {Text(error).font(.caption).foregroundStyle(.orange)}
+                    if let message=bridge.commandStatus,!message.hasPrefix("指令状态") {Text(message).font(.caption).foregroundStyle(FleetPalette.warn)}
+                    if let error=bridge.conversationError {Text(error).font(.caption).foregroundStyle(FleetPalette.warn)}
                     Section("最近") {
                         ForEach(bridge.conversations) {chat in
                             Button {Task{if await bridge.selectChat(chat.id){close()}}} label:{
                                 HStack {
                                     Text(chat.title).fontWeight(bridge.snapshot.currentConversationId==chat.id ? .semibold:.regular).lineLimit(2)
                                     Spacer()
-                                    if chat.needsAttention {Image(systemName:"exclamationmark.circle").foregroundStyle(.orange)}
+                                    if chat.needsAttention {Image(systemName:"exclamationmark.circle").foregroundStyle(FleetPalette.warn)}
                                     if chat.updatedAt>0 {Text(Date(timeIntervalSince1970:chat.updatedAt),style:.time).font(.caption).foregroundStyle(.secondary)}
                                 }.padding(.vertical,8)
                             }.buttonStyle(.plain).disabled(bridge.switchingChat || bridge.sending)
@@ -81,6 +81,6 @@ struct ChatDeletionActions:ViewModifier {
     }
     func body(content:Content)->some View {
         content.contextMenu {Button("删除聊天",systemImage:"trash",role:.destructive,action:requestDelete)}
-            .swipeActions(edge:.trailing,allowsFullSwipe:false) {Button("删除",systemImage:"trash",action:requestDelete).tint(.red)}
+            .swipeActions(edge:.trailing,allowsFullSwipe:false) {Button("删除",systemImage:"trash",action:requestDelete).tint(FleetPalette.bad)}
     }
 }

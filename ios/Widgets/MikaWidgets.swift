@@ -49,7 +49,7 @@ struct StatusWidgetContent: View {
                 if entry.snapshot.updatedAt > 0 {
                     HStack(spacing: 3) { Text("更新于"); Text(entry.snapshot.date, style: .time) }.font(.caption2).foregroundStyle(.secondary)
                 } else { Text("打开 App 连接安卓").font(.caption2) }
-                Text("查看 ↗").font(.caption).foregroundStyle(.mint)
+                Text("查看 ↗").font(.caption).foregroundStyle(FleetPalette.accent)
             }
         }
     }
@@ -72,12 +72,12 @@ struct LiveStatus: Widget {
                 DynamicIslandExpandedRegion(.leading) { HStack { AoraAvatar(phase: context.isStale ? "offline" : context.state.phase).frame(width: 42, height: 42); Text(context.attributes.isDemo ? "演示" : "agent").font(.caption) } }
                 DynamicIslandExpandedRegion(.trailing) { Text(context.attributes.device).font(.caption).foregroundStyle(.secondary) }
                 DynamicIslandExpandedRegion(.bottom) {
-                    HStack { Text(context.isStale ? "等待状态更新" : AgentSnapshot.label(context.state.phase)).font(.headline); Spacer(); Link("打开控制台", destination: URL(string: "mikaremote://device/" + context.attributes.deviceId)!).font(.caption).foregroundStyle(.mint) }.padding(.vertical, 10)
+                    HStack { Text(context.isStale ? "等待状态更新" : AgentSnapshot.label(context.state.phase)).font(.headline); Spacer(); Link("打开控制台", destination: URL(string: "mikaremote://device/" + context.attributes.deviceId)!).font(.caption).foregroundStyle(FleetPalette.accent) }.padding(.vertical, 10)
                 }
             } compactLeading: { AoraAvatar(phase: context.isStale ? "offline" : context.state.phase).frame(width: 24, height: 24) }
-              compactTrailing: { Image(systemName: context.isStale ? "clock" : context.state.phase == "running" ? "ellipsis" : "hand.raised.fill").foregroundStyle(context.isStale ? .orange : .mint) }
+              compactTrailing: { Image(systemName: context.isStale ? "clock" : context.state.phase == "running" ? "ellipsis" : "hand.raised.fill").foregroundStyle(context.isStale ? FleetPalette.warn : FleetPalette.accent) }
               minimal: { AoraAvatar(phase: context.isStale ? "offline" : context.state.phase).frame(width: 24, height: 24) }
-              .widgetURL(URL(string: "mikaremote://device/" + context.attributes.deviceId)).keylineTint(.mint)
+              .widgetURL(URL(string: "mikaremote://device/" + context.attributes.deviceId)).keylineTint(FleetPalette.accent)
         }
     }
 }
