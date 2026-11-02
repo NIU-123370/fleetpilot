@@ -122,8 +122,9 @@ Device A in the content group switches to organising existing material; the rest
 | `tools/android-emulators/` | Emulator harness |
 | `docs/` | Setup guides, protocol notes, verification records |
 
-**Android**: JDK 17 and the Android SDK (compileSdk 36); minimum installable version Android 11.
-Device-operation capabilities depend on further system versions and permissions.
+**Android**: JDK 17 and the Android SDK (compileSdk 36); minimum installable version Android 12.
+This fork raised minSdk from 30 to 31 because the frosted-glass chrome needs API 31 backdrop blur —
+Android 11 can no longer install. Device-operation capabilities depend on further system versions and permissions.
 
 ```sh
 ./gradlew :app:assembleDebug
@@ -163,8 +164,10 @@ Read this before pointing it at devices you care about:
 - **Controllers do not sync.** Groups and settings live on the controller in use; two controllers see two states.
 - **The client identity is still upstream's.** Package name, iOS target and in-app naming are unchanged —
   list in [UPSTREAM.md](UPSTREAM.md).
-- **Nothing here has been verified on real hardware yet.** This commit only pulls, renames and rewrites
-  docs; no build or device run has been performed, so no "tested on" claim is made anywhere.
+- **Nothing here has been verified on real hardware yet.** The UI code has been changed once (single-hue
+  palette and glass materials — see `docs/ui-redesign.md`), but it has **never been compiled or run on a
+  device**: this machine has neither the Android SDK nor Xcode, so verification stops at Swift syntax
+  parsing and a structural check of the Kotlin edits. No "tested on" claim is made anywhere.
 
 ## Development plan
 

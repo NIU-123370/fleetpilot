@@ -16,20 +16,28 @@
 
 ## 本仓库相对上游改了什么
 
-只改文档和门面，**一行代码没动**：
+第一阶段（提交 `7291fbf`）只改文档和门面，一行代码没动。第二阶段开始改界面，下表是当前累计状态：
 
 | 文件 | 改动 |
 | --- | --- |
-| `README.md` | 重写（新名字、新首屏、徽标、章节结构、二次开发计划） |
+| `README.md` | 重写（新名字、新首屏、徽标、章节结构、二次开发计划）；Android 最低版本随 minSdk 抬到 12 |
 | `README.en.md` | 同上，英文版 |
 | `docs/media/brand/fleetpilot-logo.png` | 新增，本仓库自己的标识 |
 | `UPSTREAM.md` | 本文件 |
+| `docs/ui-redesign.md` | 新增，界面重设计的决策记录（配色口径、材质矩阵、逐屏清单） |
+| `docs/install-with-agent.md`、`.en.md`、`docs/setup-guide.md`、`.en.md` | 安卓 11 那一档随 minSdk 抬到 31 后不再存在，逐条改写 |
+| `app/src/main/java/com/wangzan101/mika/ui/theme/Colors.kt` | 调色板改成单色相（紫），新增 wallTop / wallBottom / glassFill / glassHi |
+| `app/src/main/java/com/wangzan101/mika/ui/theme/Glass.kt` | 新增：壁纸与玻璃面板，零第三方依赖 |
+| `app/src/main/java/com/wangzan101/mika/ui/FleetShell.kt` | 根节点铺壁纸；底部导航、输入框、设备侧栏改玻璃/半透明 |
+| `app/build.gradle.kts` | minSdk 30 → 31（背景模糊要 API 31） |
+| `ios/Shared/FleetPalette.swift` | 新增：与安卓同一套单色相 token、壁纸、`fleetGlass`（iOS 26 系统材质，17–19 退回超薄材质） |
+| `ios/App`、`ios/Shared`、`ios/Widgets` 下若干 `.swift` | 散落的系统彩色（mint/teal/orange/red/green/blue/purple/pink）换成同一套 token；头像逐机色相旋转收敛到紫带 |
 | `.git` | 未继承上游历史，从零开始提交；出处以本文件与两份 README 顶部标注为准 |
 
 上游的 `docs/media/brand/phongent-logo.png`、`phongent-icon.png` 以及 `ios/App/Assets.xcassets/AppIcon.appiconset/phongent.png`
 都留在原位没删——它们仍被工程文件引用，删了会让构建找不到资源。
 
-## 怎么核对"只改了这些"
+## 怎么核对改了哪些
 
 ```sh
 git clone --depth 1 https://github.com/mylea1/phongent.git /tmp/upstream
@@ -37,8 +45,20 @@ git clone --depth 1 https://github.com/NIU-123370/fleetpilot.git /tmp/fleetpilot
 diff -rq -x .git /tmp/upstream /tmp/fleetpilot
 ```
 
-期望输出只有上表那几项（新增两份文件、改了两份 README）。多出来任何一条，
-说明有人在没更新本文件的情况下动了代码。
+输出应当只有上表列出的那些文件。**多出来任何一条，说明有人在没更新本表的情况下动了代码。**
+
+## 这批界面改动验证到什么程度（别当成已验证）
+
+| 检查 | 状态 |
+| --- | --- |
+| Swift 语法解析（`swiftc -parse`，30 个文件） | ✅ 全过；正对照：故意截断一个文件能报 4 个 error |
+| Swift 类型检查与链接 | ❌ 没做——本机只有 Command Line Tools，没有 Xcode 与 iOS SDK |
+| Kotlin 括号/引用结构核对 | ✅ 平衡；新符号的 import 与取值逐项对过 |
+| Kotlin 编译（`:app:compileDebugKotlin`） | ❌ 没做——本机没有 Android SDK |
+| iOS 26 的 `glassEffect(_:in:)` 调用形状 | ⚠️ 照公开写法写，未经编译验证；Xcode 装上后第一件事就是验这一行 |
+| 跑起来好不好看、滚起来掉不掉帧 | ❌ 没跑过任何一台真机或模拟器 |
+
+**Why：** 这个仓库的立身之处是"没验证的话不写成已验证"。上面这些格子空着，比补一个好看的结论有用。
 
 ## 还没改名的部分（二次开发要一起处理的）
 

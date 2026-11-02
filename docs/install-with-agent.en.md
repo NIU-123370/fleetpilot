@@ -54,8 +54,9 @@ Success: **exactly one** device is listed, with state `device`.
 adb shell getprop ro.build.version.sdk
 ```
 
-- Below 30 (older than Android 11): Mika cannot be installed. Tell the user the system is too old and stop.
-- 30 (Android 11): Mika installs, but cannot operate apps (phone control needs Android 12). Only web, files and chat work. Tell the user and ask whether to continue.
+- Below 31 (older than Android 12): it cannot be installed. Tell the user the system is too old and stop.
+  Upstream still installed on 30 (Android 11) with web, files and chat only; this fork raised minSdk to 31,
+  so that tier no longer exists here.
 - 31 to 33 (Android 12 and 13): tasks work, but background work may briefly take input focus away from the main screen. 34 or higher (Android 14+) is best.
 
 ### 1.4 CPU architecture
