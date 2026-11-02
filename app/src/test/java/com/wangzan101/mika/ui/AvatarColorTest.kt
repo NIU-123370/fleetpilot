@@ -32,6 +32,13 @@ class AvatarColorTest {
         assertEquals(avatarColorIndex("ABC"), avatarColorIndex("abc"))
     }
 
+    /** 形状也要散得开:六种形状至少用到 4 种。 */
+    @Test
+    fun shapesSpread() {
+        val used = (0 until 64).map { avatarShapeIndex("device-$it") }.toSet()
+        assertTrue("64 个设备只用到 $used（形状散不开）", used.size >= 4)
+    }
+
     /** 相邻编号不该都撞在一起:连号是最常见的 id 形态。 */
     @Test
     fun consecutiveIdsDoNotCollide() {

@@ -122,14 +122,16 @@ fun FleetShell(systemStatus:com.wangzan101.mika.settings.SystemStatus,onFix:(Fix
                 // 左边栏常驻：以前没选设备时整屏铺 localChat()，侧栏会突然消失，看起来像"栏没了"。
                 1->Column(Modifier.fillMaxSize()){
                 Row(Modifier.weight(1f)){
+                    // 顺序 = 侧栏从上往下的次序,头像形状按它取(第三台三角形、第四台四边形……)
+                    val connectedOrder=devices.filter{it.connected}
                     LazyColumn(Modifier.width(76.dp).background(MikaTheme.colors.glassFill)){
                         item{TextButton(onClick={showComputer=false;target="all";activeGroup=null}){Text("全部")}}
                         devices.filter{it.connected}.groupBy{groups[it.id] ?: "默认组"}.toSortedMap().forEach{(group,members)->
                             item(key="group:$group"){Row{TextButton(onClick={target="all";activeGroup=group},modifier=Modifier.weight(1f),contentPadding=PaddingValues(0.dp)){Text(group,style=MaterialTheme.typography.labelSmall)};TextButton(onClick={collapsedGroups=if(group in collapsedGroups)collapsedGroups-group else collapsedGroups+group},modifier=Modifier.width(24.dp),contentPadding=PaddingValues(0.dp)){Text(if(group in collapsedGroups)"›" else "⌄")}}}
-                            if(group !in collapsedGroups)items(members,key={it.id}){device->FleetAvatarButton(device.id,device.name,target==device.id,onClick={showComputer=false;target=device.id},onMention={target="all";activeGroup=null;input+=" @${device.name} "})}
+                            if(group !in collapsedGroups)items(members,key={it.id}){device->FleetAvatarButton(device.id,device.name,target==device.id,onClick={showComputer=false;target=device.id},onMention={target="all";activeGroup=null;input+=" @${device.name} "},ordinal=connectedOrder.indexOfFirst{it.id==device.id})}
                         }
                         // 电脑端和本机/其它手机并排:同样一颗小球,选中时打开"电脑派来的任务"。
-                        item(key="computer"){FleetAvatarButton("computer","电脑端",showComputer,onClick={showComputer=true;target=null;activeGroup=null},onMention={})}
+                        item(key="computer"){FleetAvatarButton("computer","电脑端",showComputer,onClick={showComputer=true;target=null;activeGroup=null},onMention={},ordinal=connectedOrder.size)}
                     }
                     if(showComputer)Box(Modifier.weight(1f)){ComputerTasks()} else if(target==null)Box(Modifier.weight(1f)){localChat()} else Column(Modifier.fillMaxSize().padding(16.dp)){
 
