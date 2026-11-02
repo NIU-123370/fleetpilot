@@ -91,7 +91,7 @@ data class DiagnosticsSnapshot(
 
 /** 把 [DiagnosticsSnapshot] 写成一段纯文本:分段顺序固定,英文键,发到微信或 GitHub 都好读。最后整段再过一遍脱敏。 */
 object Diagnostics {
-    const val HEADER = "phongent 诊断信息 / phongent diagnostics"
+    const val HEADER = "FleetPilot 诊断信息 / FleetPilot diagnostics"
 
     fun render(s: DiagnosticsSnapshot): String = sanitize(buildString {
         appendLine(HEADER)

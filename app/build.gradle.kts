@@ -18,7 +18,8 @@ android {
         minSdk = 31
         targetSdk = 35
         versionCode = 10012
-        versionName = "1.0.12-phongent"
+        // 带 - 的那段是「预发布」标记：同号的正式版比它新（比较逻辑在 AppVersion）。这次只改名，不动语义。
+        versionName = "1.0.12-FleetPilot"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "GIT_HASH", "\"$gitHash\"")
         // 关于页版本号后的 Beta 标记;出正式版时改成 false

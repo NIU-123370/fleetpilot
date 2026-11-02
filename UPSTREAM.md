@@ -26,12 +26,15 @@
 | `UPSTREAM.md` | 本文件 |
 | `docs/ui-redesign.md` | 新增，界面重设计的决策记录（配色口径、材质矩阵、逐屏清单） |
 | `docs/roadmap.md` | 顶上补一句：这份是**上游**的路线图，本衍生项目自己的计划在 `README.md` 的「二次开发计划」 |
+| `app/src/main/res/values*/strings*.xml`（三个语言的整份文案，526 处）与 `app/src/test`、`app/src/androidTest` 里对应的期望 | 把界面上的产品名统一成 **FleetPilot**（原来念 phongent，是上游改的名）。`app_name` 只有一份、URL 与上游名一律没动：紧贴 `/` 的那些是仓库地址（`mylea1/phongent`），这类误改我抓到过一次并补回来了 |
+| `ios/App/Info.plist`、`ios/Widgets/Info.plist`、`ios/project.yml`、`ios/App/ModelAccount.swift` | iOS 的显示名跟上（App 与小组件都改；小组件那条在系统"桌面小组件"列表里显示） |
+| `core/.../chatgpt/ChatGptAuth.kt` 与它的测试 | 发给 ChatGPT 登录的 `agent_name_hint` 也跟着走，不再冒上游的名字 |
 | `docs/setup-guide.md`、`.en.md` | 安卓 11 那一档随 minSdk 抬到 31 后不再存在，逐条改写 |
 | `docs/install-with-agent.md`、`.en.md` | 同上；另外第 2 步从"到上游 release 页下载 APK"改成"在本机从源码构建"，并写明不要拿上游的包顶替（理由见下节） |
 | `app/src/main/java/com/wangzan101/mika/ui/theme/Colors.kt` | 调色板改成单色相（紫），新增 wallTop / wallBottom / glassFill / glassHi |
 | `app/src/main/java/com/wangzan101/mika/ui/theme/Glass.kt` | 新增：壁纸与玻璃面板，零第三方依赖 |
 | `app/src/main/java/com/wangzan101/mika/ui/FleetShell.kt` | 根节点铺壁纸；底部导航、输入框、设备侧栏改玻璃/半透明 |
-| `app/build.gradle.kts` | minSdk 30 → 31（背景模糊要 API 31） |
+| `app/build.gradle.kts` | minSdk 30 → 31（背景模糊要 API 31）；versionName 的后缀从 `-phongent` 改成 `-FleetPilot`（带 `-` 的那段在 `AppVersion` 里算"预发布"，只改名不动比较语义） |
 | `ios/Shared/FleetPalette.swift` | 新增：与安卓同一套单色相 token、壁纸、`fleetGlass`（iOS 26 系统材质，17–19 退回超薄材质）；后来再加一个 `fleetGlassBackground`，把"只在背后垫一层、还能带色调"的编译器条件也收进同一个出口 |
 | `ios/App/DeviceChat.swift` | 输入框那层原来直接调 `.glassEffect(...)`，外面只包 `#available(iOS 26.0, *)`——运行时的判断救不了编译期，Xcode 16.4 那一路就是这么红的；改成走 `fleetGlassBackground` |
 | `core/src/test/kotlin/com/wangzan101/mika/core/IosCompilerGateTest.kt` | 新增守卫：26-only 的调用只许待在 `FleetPalette` 那个带 `#if compiler(>=6.2)` 的出口里，别处出现就红（投毒验过） |
@@ -109,7 +112,7 @@ job 只打印不判定。
 | `./gradlew :core:test`（纯 JVM 模块，含文档一致性测试与上面两节的 iOS 守卫） | ✅ 2439 条，0 失败，2 跳过 |
 | `./gradlew :app:testDebugUnitTest` | ✅ 986 条，**0 失败**（原来 18 条红，见下一节，已修；之后新增 4 条用例） |
 | `./gradlew :app:compileDebugKotlin` | ✅ 通过（先失败两次：`matchParentSize` 不该 import、`@Composable` 不能在 DrawScope 里调用；都已修） |
-| `./gradlew :app:assembleDebug` | ✅ 出包 `app-debug.apk` 103,696,492 字节（约 99 MB）；`classes26.dex` 里能查到 FleetGlassSurface / FleetWallpaper 的符号，证明新代码真进了产物 |
+| `./gradlew :app:assembleDebug` | ✅ 出包 `app-debug.apk` 99,475,887 字节（约 95 MB；同一次改名前后差 4 MB，是 dex/压缩的差异，不是少了东西——包里 `assets/runtime/rootfs.tar.xz` 31.5 MB、`lib/arm64-v8a/libproot.so / libmikarun.so / libproot_loader.so` 都在，908 条目 / 解压后 123.4 MB）。`classes26.dex` 里能查到 FleetGlassSurface / FleetWallpaper 的符号，证明新代码真进了产物；`aapt dump badging` 读到的 `application-label` 是 FleetPilot、`versionName` 是 1.0.12-FleetPilot；`classes26.dex` 里能查到 FleetGlassSurface / FleetWallpaper 的符号，证明新代码真进了产物 |
 | `./gradlew :app:assembleDebugAndroidTest` | ✅ 编译并打包 `app-debug-androidTest.apk` 4.1 MB。CI 里也跑这一步——**只编译，不运行**（没有设备）。加它是因为 androidTest 里"关于页顶上那行写着 Mika"那条断言早就和界面不一致，而平时没人跑得到 |
 | GitHub Actions（`.github/workflows/ci.yml`） | ✅ `4f0a81f` 起三条 job 全绿（2026-11-02 06:0x 那一次）：`android` 的"跑测试并出包"跑了 442 秒并附上两个 APK，`provenance`、`ios-syntax` 绿。此前 `android` 连红四次，原因见下面那节 |
 | Swift 语法解析（`swiftc -parse`，30 个文件） | ✅ 全过；正对照：故意截断一个文件能报 4 个 error。**这条只到语法**——看不见"某文件没参与编译"和类型错误，上面那节讲的就是它漏掉的东西 |
@@ -236,7 +239,7 @@ ubuntu-latest 镜像自带一个 SDK，并用 `ANDROID_SDK_ROOT` 指过去；我
 - 安卓包名与 namespace：`app/build.gradle.kts` 里的 `com.wangzan101.mika`
 - iOS 工程与 scheme：`ios/MikaRemote.xcodeproj`、target 名 MikaRemote
 - 源码目录树按包名组织：`app/src/main/java/com/wangzan101/mika/`、`core/src/*/kotlin/com/wangzan101/mika/`
-- 界面文案、通知渠道、无障碍服务名里出现的 `Mika` 字样
+- 通知渠道名与无障碍服务名里出现的旧名（下面第 2 类）——**给用户看的文案已经统一到 FleetPilot**，这三类没跟着动是有原因的
 - 构建产物名沿用上游（本仓库不发布 release，README 里也不挂上游的 APK 下载链）
 
 这一轮把"界面上说自己是谁"接到了一个来源之后，剩下的 `Mika` 都归在下面这三类，各自都有不动的理由：

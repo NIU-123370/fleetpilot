@@ -14,8 +14,8 @@ class EnglishCopyTest {
 
     @Test fun chatPage() {
         assertEquals("Good morning", ChatCopy.greeting(7))
-        assertEquals("What should phongent do?", ChatCopy.EMPTY_PROMPT)
-        assertEquals("Open WeChat and message Wang Zan to add me to the phongent beta group", ChatCopy.examples.first().text)
+        assertEquals("What should FleetPilot do?", ChatCopy.EMPTY_PROMPT)
+        assertEquals("Open WeChat and message Wang Zan to add me to the FleetPilot beta group", ChatCopy.examples.first().text)
         assertEquals("1 earlier step", ChatCopy.earlierSteps(1))
         assertEquals("3 earlier steps", ChatCopy.earlierSteps(3))
     }
@@ -23,8 +23,8 @@ class EnglishCopyTest {
     @Test fun settingsAndSetup() {
         assertEquals("No usable model yet", StatusCopy.banner(Problem.NoModel).title)
         assertEquals("Set up phone control", PhoneSetupCopy.TITLE)
-        assertEquals("Hi, I’m phongent", WelcomeCopy.TITLE)
-        assertEquals("About phongent", AboutCopy.TITLE)
+        assertEquals("Hi, I’m FleetPilot", WelcomeCopy.TITLE)
+        assertEquals("About FleetPilot", AboutCopy.TITLE)
     }
 
     @Test fun capsule() {
