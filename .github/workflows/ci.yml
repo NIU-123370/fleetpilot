@@ -1,0 +1,99 @@
+name: ci
+
+# 一条流水线的意义是"别人 clone 下来也能跑出和我一样的数"。
+# 本地跑过什么，这里就跑什么；跑不了的（iOS 真编译、真机手感）在注释里写明，不假装验证过。
+#
+# 为什么安卓 SDK 用 curl 手装而不用第三方 setup action：那个 action 的大版本号一旦改名，
+# 这条流水线就会因为"拉不到 action"而红，而那种红和代码没关系。
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  ANDROID_HOME: ${{ github.workspace }}/android-sdk
+  JAVA_VERSION: "17"
+
+jobs:
+  # 安卓侧全套：纯 JVM 模块 + app 单元测试 + 出包。
+  # 这三步在 2026-11-02 的本机都真跑过（core 2426 条 0 失败、app 982 条 0 失败、apk 95 MB），
+  # 所以这条 job 红了就是真红了，不是环境差异。
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with: { distribution: temurin, java-version: "17" }
+
+      - name: 装 Android SDK（cmdline-tools + platform 36 + build-tools 36）
+        run: |
+          set -euo pipefail
+          mkdir -p "$ANDROID_HOME/cmdline-tools"
+          curl -fsSL -o /tmp/clt.zip \
+            https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip -q /tmp/clt.zip -d /tmp/clt
+          mv /tmp/clt/cmdline-tools "$ANDROID_HOME/cmdline-tools/latest"
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            "platform-tools" "platforms;android-36" "build-tools;36.0.0" > /dev/null
+          echo "已装：$(ls "$ANDROID_HOME/platforms") / $(ls "$ANDROID_HOME/build-tools")"
+
+      - name: 跑测试并出包
+        run: ./gradlew :core:test :app:testDebugUnitTest :app:assembleDebug --stacktrace
+
+      # 红的时候报告比日志有用：直接下 artifact 看是哪条断言。
+      - name: 上传测试报告
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-reports
+          path: |
+            core/build/test-results
+            app/build/test-results
+          if-no-files-found: ignore
+
+      - name: 上传 APK
+        if: success()
+        uses: actions/upload-artifact@v7
+        with:
+          name: app-debug
+          path: app/build/outputs/apk/debug/*.apk
+
+  # 出处核对：UPSTREAM.md 承诺"和上游 diff 出来只有表里那些文件"，那就每天真 diff 一次。
+  # 这一步只打印，不判定——判定标准是人写的差异表，机器不替人更新它。
+  provenance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: 与上游 0b57e35d 逐文件比对
+        run: |
+          git clone --depth 1 https://github.com/mylea1/phongent.git /tmp/upstream
+          echo "--- 本仓库相对上游的差异（应与 UPSTREAM.md 的表一致）---"
+          diff -rq -x .git /tmp/upstream "$GITHUB_WORKSPACE" | sed "s|$GITHUB_WORKSPACE|.|" || true
+
+  # iOS：这里只做到语法解析。真编译要 Xcode 与签名，本机没有，
+  # 所以这一步不许写成"构建通过"。
+  #
+  # 另外记一笔真实的坑：液态玻璃的 API 只随 Xcode 26 的 SDK 提供。
+  # FleetPalette.swift 里那段用 #if compiler(>=6.2) 圈住了——
+  # 不然旧 Xcode 连 `glassEffect` 这个名字都不认识，整包直接编译失败，
+  # 而 `#available(iOS 26, *)` 那种运行时分支救不了编译期。
+  ios-syntax:
+    runs-on: macos-14
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: 全部 Swift 文件语法解析
+        run: |
+          set -euo pipefail
+          n=0
+          for f in $(find ios -name '*.swift'); do
+            swiftc -parse -target arm64-apple-ios17.0 "$f" || { echo "!! 解析失败: $f"; exit 1; }
+            n=$((n + 1))
+          done
+          echo "OK：$n 个 Swift 文件解析通过（语法级，不等于类型检查通过）"

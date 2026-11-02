@@ -99,7 +99,8 @@ object CapsuleCopy {
     val EXPAND: String get() = tr(R.string.capsule_expand)
     val TALK: String get() = tr(R.string.capsule_talk)
     val SWAP_SIDE: String get() = tr(R.string.capsule_swap_side)
-    const val IDLE = "Mika"
+    /** 品牌名只有一个来源:`R.string.app_name`。这里以前写着字面量,结果改名时漏了两处——胶囊会念成"phongent 在干活"却报"Mika 办好了"。 */
+    val IDLE: String get() = tr(R.string.app_name)
 
     /** 读屏时一颗图标的说法:在做什么、要不要你处理、结果;好几件时的件数已在 [CapsuleView.Shown.text] 里。 */
     fun describe(view: CapsuleView.Shown): String = when {
@@ -107,7 +108,7 @@ object CapsuleCopy {
         view.kind.needsYou -> tr(R.string.capsule_desc_needs, view.text)
         view.kind == CapsuleKind.Running -> tr(R.string.capsule_desc_running, view.text)
         view.kind == CapsuleKind.Held || view.kind == CapsuleKind.Cancelled -> tr(R.string.capsule_desc_other, view.text)
-        else -> "Mika ${view.text}"
+        else -> "$IDLE ${view.text}"
     }
 }
 

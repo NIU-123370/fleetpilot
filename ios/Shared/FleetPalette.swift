@@ -59,17 +59,25 @@ struct FleetWallpaper: View {
 }
 
 extension View {
-    /// 玻璃材质:iOS 26 用系统液态玻璃,iOS 17–19 退回超薄材质(视觉接近,但不会随壁纸自动取色)。
+    /// 玻璃材质:iOS 26 用系统液态玻璃,其余退回超薄材质(视觉接近,但不会随壁纸自动取色)。
     ///
     /// 这是 HUD-2 那条决定:工程 deploymentTarget 仍是 iOS 17.0,所以每处玻璃都必须带降级分支,
     /// 不许假设自己跑在 26 上。
+    ///
+    /// `#if compiler(>=6.2)` 不是多余的:液态玻璃的 API 只随 Xcode 26 的 SDK 提供,
+    /// 用旧编译器(哪怕运行时分支写得对)连这个名字都看不见,整包会直接编译失败。
+    /// 把它圈在编译器条件里,旧 Xcode 走 fallback,新 Xcode 才看到系统材质。
     @ViewBuilder
     func fleetGlass(cornerRadius: CGFloat = 24) -> some View {
+        #if compiler(>=6.2)
         if #available(iOS 26.0, *) {
             self.glassEffect(.regular, in: RoundedRectangle(cornerRadius: cornerRadius))
         } else {
             self.background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius))
         }
+        #else
+        self.background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius))
+        #endif
     }
 
     /// 滚动区里的卡片:半透明不采样背景。长列表逐卡实时模糊会掉帧,所以只有常驻三条边用 `fleetGlass`。
