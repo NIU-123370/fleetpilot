@@ -9,11 +9,12 @@
 Assign tasks to multiple Android devices in natural language and watch their progress,
 notifications, and live screens from one place. Both iPhone and Android can be the controller.
 
-[![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![android](https://img.shields.io/badge/Android-11%2B-3DDC84?logo=android&logoColor=white)](#development-and-builds)
-[![ios](https://img.shields.io/badge/iOS-17%2B-000000?logo=apple&logoColor=white)](REMOTE-IOS.md)
-[![kotlin](https://img.shields.io/badge/Kotlin-Android-7F52FF?logo=kotlin&logoColor=white)](#repository-layout)
-[![status](https://img.shields.io/badge/status-in%20development-orange)](UPSTREAM.md)
+[![CI](https://img.shields.io/github/actions/workflow/status/NIU-123370/fleetpilot/ci.yml?branch=main&label=CI)](https://github.com/NIU-123370/fleetpilot/actions/workflows/ci.yml)
+[![license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[![Android](https://img.shields.io/badge/Android-12%2B-3DDC84?logo=android&logoColor=white)](#what-it-is)
+[![iOS](https://img.shields.io/badge/iOS-17%2B-000000?logo=apple&logoColor=white)](#what-it-is)
+[![Kotlin](https://img.shields.io/badge/Kotlin-JVM-7F52FF?logo=kotlin&logoColor=white)](#development-and-builds)
+[![derived](https://img.shields.io/badge/derived%20from%20upstream-see%20UPSTREAM-informational)](UPSTREAM.md)
 
 [简体中文](README.md) · English
 
@@ -36,6 +37,12 @@ devices, to a group, or to one named device, and review each device's progress, 
 live screen from the controller — including replying to a notification on the device that received it.
 
 Android can manage other devices and operate locally; iOS acts as a controller against Android runners.
+
+**A computer is not a third kind of controller — it is a way to reach one phone.** Over MCP a computer
+connects to the service running on a single phone, one at a time; to drive a fleet from a computer you
+open one connection per phone, or let that phone act as the controller. macOS appears in this repository
+only as a build and test host (Xcode for the iOS target, the pairing simulator tooling), so this page
+does not claim a Mac client.
 
 | Capability | iOS | Android |
 | --- | --- | --- |
@@ -179,11 +186,13 @@ Read this before pointing it at devices you care about:
 - **Controllers do not sync.** Groups and settings live on the controller in use; two controllers see two states.
 - **The client identity is still upstream's.** Package name, iOS target and in-app naming are unchanged —
   list in [UPSTREAM.md](UPSTREAM.md).
-- **Nothing here has been verified on real hardware yet.** The UI code has been changed and **does compile
-  on Android** (`:app:assembleDebug` produces a 95 MB apk), but no line of Swift has been through a compiler
-  (this machine has no Xcode) and nothing has run on a device or simulator. Compiling proves the types, not
-  that the lists stay smooth. The verification boundary is listed per check in UPSTREAM.md, so no
-  "tested on" claim is made anywhere.
+- **How far verification goes is written per check in UPSTREAM.md, and this page follows it.** Android:
+  the unit suites run and the debug apk is built (`:app:assembleDebug`); androidTest is compiled but
+  **not executed**, because CI has no device attached. The UI changes have been installed and driven on
+  **one real Android phone** — model configured, accessibility granted, a task dispatched from a computer
+  over MCP, with the floating capsule and the in-app computer pane both captured on screen; several defects
+  were found exactly that way. iOS: only the two real Xcode compiles in CI pass (26.3 and 16.4) —
+  **it has never run on an iPhone**. Compiling proves the types, not that the lists stay smooth.
 
 ## Development plan
 

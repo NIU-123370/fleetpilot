@@ -116,15 +116,16 @@ job 只打印不判定。
 | 检查 | 状态 |
 | --- | --- |
 | `./gradlew :core:test`（纯 JVM 模块，含文档一致性测试与上面两节的 iOS 守卫） | ✅ 2439 条，0 失败，2 跳过 |
-| `./gradlew :app:testDebugUnitTest` | ✅ 986 条，**0 失败**（原来 18 条红，见下一节，已修；之后新增 4 条用例） |
+| `./gradlew :app:testDebugUnitTest` | ✅ 997 条，**0 失败**，0 跳过（2026-11-03 现数：137 个结果文件加总。原来 18 条红，见下一节，已修；之后陆续补了设备名乱码、头像色相等用例） |
 | `./gradlew :app:compileDebugKotlin` | ✅ 通过（先失败两次：`matchParentSize` 不该 import、`@Composable` 不能在 DrawScope 里调用；都已修） |
 | `./gradlew :app:assembleDebug` | ✅ 出包 `app-debug.apk` 99,475,887 字节（约 95 MB；同一次改名前后差 4 MB，是 dex/压缩的差异，不是少了东西——包里 `assets/runtime/rootfs.tar.xz` 31.5 MB、`lib/arm64-v8a/libproot.so / libmikarun.so / libproot_loader.so` 都在，908 条目 / 解压后 123.4 MB）。`classes26.dex` 里能查到 FleetGlassSurface / FleetWallpaper 的符号，证明新代码真进了产物；`aapt dump badging` 读到的 `application-label` 是 FleetPilot、`versionName` 是 1.0.12-FleetPilot；`classes26.dex` 里能查到 FleetGlassSurface / FleetWallpaper 的符号，证明新代码真进了产物 |
 | `./gradlew :app:assembleDebugAndroidTest` | ✅ 编译并打包 `app-debug-androidTest.apk` 4.1 MB。CI 里也跑这一步——**只编译，不运行**（没有设备）。加它是因为 androidTest 里"关于页顶上那行写着 Mika"那条断言早就和界面不一致，而平时没人跑得到 |
-| GitHub Actions（`.github/workflows/ci.yml`） | ✅ `4f0a81f` 起三条 job 全绿（2026-11-02 06:0x 那一次）：`android` 的"跑测试并出包"跑了 442 秒并附上两个 APK，`provenance`、`ios-syntax` 绿。此前 `android` 连红四次，原因见下面那节 |
+| GitHub Actions（`.github/workflows/ci.yml`） | ✅ 最新一次 `b2baf56`（2026-11-02 14:1x，main）**五条 job 全绿**：`android`、`provenance`、`ios-syntax`、`iOS 编译（Xcode 26.3）`、`iOS 编译（Xcode 16.4）`。此前 `android` 连红四次，原因见下面那节；`ios-build` 是后来才加的，加它之前 iOS 侧只做过语法解析 |
 | Swift 语法解析（`swiftc -parse`，30 个文件） | ✅ 全过；正对照：故意截断一个文件能报 4 个 error。**这条只到语法**——看不见"某文件没参与编译"和类型错误，上面那节讲的就是它漏掉的东西 |
 | Swift 类型检查与链接、iOS 构建（本机） | ❌ 没做——本机只有 Command Line Tools，没有 Xcode（装它要 Apple ID 且 12 GB 起） |
 | iOS 真编译（CI 的 `ios-build`，两个 Xcode 各一路） | ✅ 两路都绿：26.3 在 `2b4a348`（App 与 Widget 扩展都编，101 秒，模拟器、不签名、`DEVELOPMENT_TEAM` 清空），16.4 在 `3e74c90`。中间 16.4 那一路在 `2235dab` 红过一次，报 `has no member 'glassEffect'`——是真 bug，见上节第 3 条。这仓库第一次真的做上 Swift 类型检查 |
-| 跑起来好不好看、滚起来掉不掉帧 | ❌ 没跑过任何一台真机或模拟器 |
+| 跑起来好不好看、滚起来掉不掉帧 | 安卓侧 ✅ 跑过：先在本机安卓模拟器上装 debug 包跑通，再在**维护者自己的 vivo 真机**上装包、填模型、开无障碍与通知读取，由这台电脑经 USB/MCP 下发任务，悬浮胶囊与 App 内「电脑端」页都截了图。界面发现的四个缺陷（头像色相跑出紫带、启动图标、中文设备名乱码、关于入口）就是这条路找出来的。iOS 侧 ❌ 仍然没在任何 iPhone 或模拟器上运行过——只有 CI 的两路真编译 |
+| 真机跑过的模型与任务 | 只验到「能连上、能派活、能办完、结果回得来」这一条链路；掉帧、长时间断网、多机并发**没测** |
 
 **Why：** 这个仓库的立身之处是"没验证的话不写成已验证"。上面这些格子空着，比补一个好看的结论有用。
 
